@@ -1,9 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using SwimTrainingApp.Data;
 using SwimTrainingApp.Models;
+using Microsoft.AspNetCore.Authentication;
 
 namespace SwimTrainingApp.Controllers
 {
+    [Authorize] // Wymaga autoryzacji do uzyskania dostępu do strony głównej
     public class HomeController : Controller
     {
         private readonly AppDbContext _db;
@@ -13,45 +17,28 @@ namespace SwimTrainingApp.Controllers
             _db = db;
         }
 
+        // Strona główna (GET)
         public IActionResult Index()
         {
-            return View(); 
+            // Pobranie nazwy zalogowanego użytkownika
+            var username = User.Identity?.Name;
+
+            // Przekazanie nazwy użytkownika do widoku
+            ViewBag.Username = username;
+
+            return View(); // Renderowanie widoku Index.cshtml
         }
 
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View(); 
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Register(string username, string password, string confirmPassword)
-        {
-            if (password != confirmPassword)
-            {
-                ViewBag.ErrorMessage = "Passwords do not match.";
-                return View();
-            }
-
-            if (_db.Users.Any(u => u.Username == username))
-            {
-                ViewBag.ErrorMessage = "Username already exists.";
-                return View();
-            }
-
-            var user = new User { Username = username, Password = password, Role = UserRole.Athlete };
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
-
-            return RedirectToAction("Login");
-        }
-
+        // Strona logowania (GET)
+        [AllowAnonymous] // Logowanie nie wymaga autoryzacji
         [HttpGet]
         public IActionResult Login()
         {
-            return View(); 
+            return View(); // Renderowanie widoku Login.cshtml
         }
 
+        // Logowanie użytkownika (POST)
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
         {
@@ -62,7 +49,27 @@ namespace SwimTrainingApp.Controllers
                 return View();
             }
 
-            return RedirectToAction("Index"); 
+            // Tworzenie tożsamości użytkownika
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role.ToString())
+            };
+
+            var identity = new ClaimsIdentity(claims, "Cookies");
+            var principal = new ClaimsPrincipal(identity);
+
+            // Zalogowanie użytkownika
+            await HttpContext.SignInAsync(principal);
+
+            return RedirectToAction("Index"); // Przekierowanie na stronę główną
+        }
+
+        // Wylogowanie użytkownika (GET)
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync();
+            return RedirectToAction("Login");
         }
     }
 }
