@@ -1,11 +1,36 @@
 ﻿@{
     ViewData["Title"] = "Home";
 }
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="display-4">Welcome, @ViewBag.Username!</h1>
+            <p class="lead">This is your homepage. You can navigate to other sections from here.</p>
+            <hr />
+        </div>
+    </div>
 
-<h1>Welcome, @ViewBag.Username!</h1>
-
-<p>This is your homepage. You can navigate to other sections from here.</p>
-
-<a href="/Trainings/Create">Create Training</a><br />
-
-<a href="/Home/Logout">Logout</a>
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Create a New Training</h5>
+                    <p class="card-text">Plan a new training session by specifying tasks and details.</p>
+                    <a href="/Trainings/Create" class="btn btn-primary">Create Training</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Logout</h5>
+                    <p class="card-text">Click below to log out of the application securely.</p>
+                    <a href="/Home/Logout" class="btn btn-danger">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

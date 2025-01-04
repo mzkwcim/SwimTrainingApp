@@ -1,32 +1,56 @@
 ﻿@model SwimTrainingApp.Models.User
 
-<h2>Register</h2>
-
-<form asp-action="Register" method="post">
-    <div>
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required />
-    </div>
-    <div>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required />
-    </div>
-    <div>
-        <label for="confirmPassword">Confirm Password:</label>
-        <input type="password" id="confirmPassword" name="confirmPassword" required />
-    </div>
-    <div>
-        <label for="role">Role:</label>
-        <select id="role" name="role">
-            <option value="Admin">Admin</option>
-            <option value="Coach">Coach</option>
-            <option value="Athlete" selected>Athlete</option>
-        </select>
-    </div>
-    <button type="submit">Register</button>
-</form>
-
-@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
-{
-    <p style="color:red">@ViewBag.ErrorMessage</p>
+@{
+    ViewData["Title"] = "Register";
 }
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4>Register</h4>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @ViewBag.ErrorMessage
+                        </div>
+                    }
+                    <form asp-action="Register" method="post">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Role</label>
+                            <select id="role" name="role" class="form-select">
+                                <option value="Admin">Admin</option>
+                                <option value="Coach">Coach</option>
+                                <option value="Athlete" selected>Athlete</option>
+                            </select>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">Register</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <p>Already have an account? <a href="/Home/Login">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

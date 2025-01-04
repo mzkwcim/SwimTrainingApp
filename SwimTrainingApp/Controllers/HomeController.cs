@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 
 namespace SwimTrainingApp.Controllers
 {
-    [Authorize] // Wymaga autoryzacji do uzyskania dostępu do strony głównej
+    [Authorize] 
     public class HomeController : Controller
     {
         private readonly AppDbContext _db;
@@ -17,27 +17,25 @@ namespace SwimTrainingApp.Controllers
             _db = db;
         }
 
-        // Strona główna (GET)
+        
         public IActionResult Index()
         {
-            // Pobranie nazwy zalogowanego użytkownika
+            
             var username = User.Identity?.Name;
 
-            // Przekazanie nazwy użytkownika do widoku
+            
             ViewBag.Username = username;
 
-            return View(); // Renderowanie widoku Index.cshtml
+            return View(); 
         }
 
-        // Strona logowania (GET)
-        [AllowAnonymous] // Logowanie nie wymaga autoryzacji
+        [AllowAnonymous] 
         [HttpGet]
         public IActionResult Login()
         {
-            return View(); // Renderowanie widoku Login.cshtml
+            return View(); 
         }
 
-        // Logowanie użytkownika (POST)
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
@@ -49,7 +47,6 @@ namespace SwimTrainingApp.Controllers
                 return View();
             }
 
-            // Tworzenie tożsamości użytkownika
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
@@ -59,13 +56,11 @@ namespace SwimTrainingApp.Controllers
             var identity = new ClaimsIdentity(claims, "Cookies");
             var principal = new ClaimsPrincipal(identity);
 
-            // Zalogowanie użytkownika
             await HttpContext.SignInAsync(principal);
 
-            return RedirectToAction("Index"); // Przekierowanie na stronę główną
+            return RedirectToAction("Index"); 
         }
 
-        // Wylogowanie użytkownika (GET)
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync();

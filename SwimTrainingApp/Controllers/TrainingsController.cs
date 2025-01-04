@@ -42,37 +42,91 @@ namespace SwimTrainingApp.Controllers
 
         public IActionResult Create()
         {
-            return View();
+            var model = new Training
+            {
+                Tasks = new List<TrainingTask> { new TrainingTask() }
+            };
+            return View(model);
         }
+
 
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Date")] Training training)
+        public async Task<IActionResult> Create(Training training)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(training);
+
+                foreach (var task in training.Tasks)
+                {
+                    task.TrainingId = training.Id; 
+                    _context.Add(task);
+                }
+
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
             return View(training);
         }
 
-        public async Task<IActionResult> Edit(int? id)
+
+        public async Task<IActionResult> Edit()
         {
-            if (id == null)
+            var trainings = await _context.Trainings.ToListAsync();
+            ViewBag.TrainingList = new SelectList(trainings, "Id", "Date");
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int selectedTrainingId)
+        {
+            if (selectedTrainingId == 0)
             {
                 return NotFound();
             }
 
-            var training = await _context.Trainings.FindAsync(id);
+            var training = await _context.Trainings
+                .Include(t => t.Tasks)
+                .FirstOrDefaultAsync(t => t.Id == selectedTrainingId);
+
             if (training == null)
             {
                 return NotFound();
             }
-            return View(training);
+
+            return View("EditForm", training); // Otwiera widok formularza edycji
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTrainingDetails(int id)
+        {
+            var training = await _context.Trainings
+                .Include(t => t.Tasks)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (training == null)
+            {
+                return NotFound();
+            }
+
+            return Json(new
+            {
+                id = training.Id,
+                date = training.Date.ToString("yyyy-MM-ddTHH:mm"), // Format dla datetime-local
+                tasks = training.Tasks.Select(t => new
+                {
+                    trainingSection = t.TrainingSection,
+                    taskDescription = t.TaskDescription,
+                    distance = t.Distance,
+                    taskType = t.TaskType
+                })
+            });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Date")] Training training)
