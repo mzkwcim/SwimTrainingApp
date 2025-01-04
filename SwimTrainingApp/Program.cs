@@ -1,11 +1,30 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using SwimTrainingApp.Data;
 using SwimTrainingApp.Models;
+using SwimTrainingApp.Validation;
+using SwimTrainingApp.Services;
+using SwimTrainingApp.Middleware;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddControllersWithViews();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Home/Login";
+        options.LogoutPath = "/Home/Logout";
+        options.AccessDeniedPath = "/Home/AccessDenied";
+    });
+
+builder.Services.AddAuthorization();
+builder.Services.AddValidatorsFromAssemblyContaining<TrainingValidator>();
+builder.Services.AddScoped<AuditLogService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -16,50 +35,23 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1"
     });
 });
+
 var app = builder.Build();
+
+app.UseStaticFiles(); 
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "SwimTrainingAPI v1");
-    c.RoutePrefix = string.Empty; 
+    c.RoutePrefix = "swagger";
 });
 
-app.MapGet("/seed", async (AppDbContext db) =>
-{
-    if (!db.Users.Any())
-    {
-        db.Users.Add(new User { Username = "admin", Password = "admin123", Role = UserRole.Admin });
-        db.Users.Add(new User { Username = "coach", Password = "coach123", Role = UserRole.Coach });
-        db.Users.Add(new User { Username = "athlete", Password = "athlete123", Role = UserRole.Athlete });
-        await db.SaveChangesAsync();
-    }
-    return "Database seeded with initial data.";
-});
-app.MapGet("/", () => "Hello World!");
-
-app.MapGet("/api/users", async (AppDbContext db) =>
-{
-    var users = await db.Users.ToListAsync();
-    return users.Select(u => new { u.Id, u.Username, u.Role });
-});
-
-app.MapGet("/api/trainings", async (AppDbContext db) =>
-{
-    var trainings = await db.Trainings.Include(t => t.Tasks).ToListAsync();
-    return trainings;
-});
-
-app.MapPost("/api/trainings", async (Training training, AppDbContext db) =>
-{
-    db.Trainings.Add(training);
-    await db.SaveChangesAsync();
-    return Results.Created($"/api/trainings/{training.Id}", training);
-});
-
-app.MapGet("/testdb", async (AppDbContext db) =>
-{
-    var count = await db.Users.CountAsync();
-    return $"Database contains {count} users.";
-});
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
