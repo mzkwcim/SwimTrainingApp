@@ -1,9 +1,17 @@
-﻿<h2>Create Training</h2>
+﻿@model SwimTrainingApp.Models.Training
 
 @{
+    ViewData["Title"] = "Create";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<form asp-action="Create" method="post">
+
+<h2>Create Training</h2>
+
+<!-- Kontener na wiadomości -->
+<div id="response-message" class="mt-3"></div>
+
+<form id="create-training-form">
+    @Html.AntiForgeryToken()
     <div class="form-group">
         <label asp-for="Date">Training Date</label>
         <input asp-for="Date" type="datetime-local" class="form-control" />
@@ -11,46 +19,7 @@
 
     <h3>Tasks</h3>
     <div id="tasks-container">
-        @for (int i = 0; i < 20; i++)
-        {
-            <div class="task-item" style="display: @(i == 0 ? "block" : "none");" data-index="@i">
-                <h4>Task @(i + 1)</h4>
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Section</label>
-                            <input type="text" name="Tasks[@i].TrainingSection" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Description</label>
-                            <input type="text" name="Tasks[@i].TaskDescription" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Distance</label>
-                            <input type="number" name="Tasks[@i].Distance" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Task Type</label>
-                            <select name="Tasks[@i].TaskType" class="form-control">
-                                <option value="NN">NN</option>
-                                <option value="RR">RR</option>
-                                <option value="ANC">ANC</option>
-                                <option value="ANP">ANP</option>
-                                <option value="AEC1">AEC1</option>
-                                <option value="AEC2">AEC2</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <hr />
-            </div>
-        }
+        <!-- Dynamicznie dodawane zadania -->
     </div>
 
     <button type="button" id="add-task-btn" class="btn btn-primary">Add Task</button>
@@ -60,21 +29,139 @@
 
 @section Scripts {
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            console.log("JS działa!"); // Test konsoli
-
-            // Dodawanie obsługi kliknięcia dla przycisku
+                   document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("create-training-form");
+            const tasksContainer = document.getElementById("tasks-container");
             const addTaskBtn = document.getElementById("add-task-btn");
+            const responseMessage = document.getElementById("response-message");
+
+            let taskIndex = 0;
+
+            // Funkcja do generowania nowych pól zadania
+            function createTaskFields(index) {
+                return `
+                    <div class="task-item" data-index="${index}">
+                        <h4>Task ${index + 1}</h4>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Section</label>
+                                    <input type="text" name="Tasks[${index}].TrainingSection" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <input type="text" name="Tasks[${index}].TaskDescription" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Distance</label>
+                                    <input type="number" name="Tasks[${index}].Distance" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Task Type</label>
+                                    <select name="Tasks[${index}].TaskType" class="form-control">
+                                        <option value="">Select Task Type</option>
+                                        <option value="NN">NN</option>
+                                        <option value="RR">RR</option>
+                                        <option value="ANC">ANC</option>
+                                        <option value="ANP">ANP</option>
+                                        <option value="AEC1">AEC1</option>
+                                        <option value="AEC2">AEC2</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                    </div>
+                `;
+            }
+
+            // Obsługa przycisku "Add Task"
             addTaskBtn.addEventListener("click", function () {
-                console.log("Przycisk Add Task został kliknięty.");
-                const tasks = document.querySelectorAll(".task-item");
-                for (let i = 0; i < tasks.length; i++) {
-                    if (tasks[i].style.display === "none") {
-                        tasks[i].style.display = "block"; // Pokazuje pierwszy ukryty formularz
-                        break; // Zatrzymuje po znalezieniu pierwszego ukrytego
+                tasksContainer.insertAdjacentHTML('beforeend', createTaskFields(taskIndex));
+                taskIndex++;
+            });
+
+            form.addEventListener("submit", function (e) {
+                e.preventDefault(); // Zapobiega tradycyjnemu wysyłaniu formularza
+
+                const formData = new FormData(form);
+
+                const data = {
+                    Tasks: []
+                };
+
+                formData.forEach((value, key) => {
+                    if (key.includes('Tasks')) {
+                        const matches = key.match(/Tasks\[(\d+)\]\.(.+)/);
+                        if (matches) {
+                            const index = matches[1];
+                            const field = matches[2];
+
+                            data.Tasks[index] = data.Tasks[index] || {};
+                            data.Tasks[index][field] = value;
+                        }
+                    } else {
+                        data[key] = value;
                     }
+                });
+
+                // Filtruj tylko wypełnione zadania
+                data.Tasks = data.Tasks.filter(task => {
+                    return task.TrainingSection && task.TaskDescription && task.Distance && task.TaskType;
+                });
+
+                console.log("Filtered data to send:", data);
+
+                const csrfTokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+                const csrfToken = csrfTokenElement ? csrfTokenElement.value : null;
+
+                if (!csrfToken) {
+                    console.error("CSRF token not found in the form.");
+                    return;
                 }
+
+                // Wysyłanie danych AJAX-em
+                fetch('/Trainings/Create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': csrfToken
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.success) {
+                        console.log("Success:", result.message);
+                        responseMessage.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+                    } else {
+                        console.error("Error:", result.message, result.errors || []);
+                        responseMessage.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+                        if (result.errors) {
+                            result.errors.forEach(err => {
+                                console.error("Validation Error:", err);
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error("AJAX Error:", error);
+                    responseMessage.innerHTML = `<div class="alert alert-danger">An unexpected error occurred.</div>`;
+                });
             });
         });
+
+
     </script>
 }

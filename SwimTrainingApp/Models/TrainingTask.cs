@@ -8,7 +8,7 @@
         public string TrainingSection { get; set; } = string.Empty; 
         public string TaskDescription { get; set; } = string.Empty; 
         public int Distance { get; set; } 
-        public TaskType TaskType { get; set; }
+        public TaskType? TaskType { get; set; }
     }
 
     public enum TaskType

@@ -18,16 +18,13 @@ namespace SwimTrainingApp.Data
         {
             base.OnModelCreating(modelBuilder);
 
-
+            // Konfiguracja relacji między Training a TrainingTask
             modelBuilder.Entity<TrainingTask>()
-                .Property(t => t.TaskDescription)
-                .HasMaxLength(500)
-                .IsRequired();
-
-            modelBuilder.Entity<TrainingTask>()
-                .Property(t => t.Distance)
-                .IsRequired()
-                .HasDefaultValue(0);
+                .HasOne(t => t.Training)
+                .WithMany(t => t.Tasks)
+                .HasForeignKey(t => t.TrainingId)
+                .OnDelete(DeleteBehavior.Cascade); // Zadania są usuwane razem z treningiem
         }
+
     }
 }
