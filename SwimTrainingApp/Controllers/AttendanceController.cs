@@ -19,13 +19,11 @@ namespace SwimTrainingApp.Controllers
         {
             _context = context;
         }
-
         public IActionResult Index()
         {
             ViewBag.Trainings = _context.Trainings.ToList();
             return View();
         }
-
         public IActionResult Create(int? TrainingId)
         {
             ViewBag.Trainings = _context.Trainings.ToList();
@@ -65,7 +63,6 @@ namespace SwimTrainingApp.Controllers
 
             return View(attendances);
         }
-
         public IActionResult Details(int? TrainingId)
         {
             ViewBag.Trainings = _context.Trainings.ToList();
@@ -84,7 +81,6 @@ namespace SwimTrainingApp.Controllers
 
             return View(attendanceList);
         }
-
         public IActionResult Edit(int? TrainingId)
         {
             ViewBag.Trainings = _context.Trainings.ToList(); 
@@ -175,7 +171,6 @@ namespace SwimTrainingApp.Controllers
 
             return View(attendanceStats);
         }
-
 
 
         public IActionResult Delete(int? TrainingId)

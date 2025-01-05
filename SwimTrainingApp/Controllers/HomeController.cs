@@ -18,23 +18,30 @@ namespace SwimTrainingApp.Controllers
             _db = db;
         }
 
-        
         public IActionResult Index()
         {
-            
             var username = User.Identity?.Name;
 
-            
+            if (username == null)
+            {
+                return RedirectToAction("Login");
+            }
+
             ViewBag.Username = username;
 
-            return View(); 
+            return View();
         }
 
-        [AllowAnonymous] 
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult Login()
         {
-            return View(); 
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index");
+            }
+
+            return View();
         }
 
         [AllowAnonymous]
@@ -52,10 +59,10 @@ namespace SwimTrainingApp.Controllers
             }
 
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
-        };
+            {
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role.ToString()) // Ensure the Role is added as a claim
+            };
 
             var identity = new ClaimsIdentity(claims, "Cookies");
             var principal = new ClaimsPrincipal(identity);
@@ -70,26 +77,29 @@ namespace SwimTrainingApp.Controllers
             await HttpContext.SignOutAsync();
             return RedirectToAction("Login");
         }
+
         [AllowAnonymous]
         [HttpGet]
         public IActionResult Register()
         {
-            return View(); 
-        }
-
-        private string HashPassword(string password)
-        {
-            using (var sha256 = SHA256.Create())
+            if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hashedBytes);
+                return RedirectToAction("Index");
             }
+
+            return View();
         }
 
         [AllowAnonymous]
         [HttpPost]
         public IActionResult Register(string username, string password)
         {
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            {
+                ViewBag.ErrorMessage = "Username and password are required.";
+                return View();
+            }
+
             if (_db.Users.Any(u => u.Username == username))
             {
                 ViewBag.ErrorMessage = "Username already exists.";
@@ -101,8 +111,8 @@ namespace SwimTrainingApp.Controllers
             var newUser = new User
             {
                 Username = username,
-                Password = hashedPassword, 
-                Role = UserRole.Athlete
+                Password = hashedPassword,
+                Role = UserRole.Athlete // Default role is Athlete
             };
 
             _db.Users.Add(newUser);
@@ -111,5 +121,22 @@ namespace SwimTrainingApp.Controllers
             return RedirectToAction("Login");
         }
 
+        [AllowAnonymous]
+        public IActionResult AccessDenied(string returnUrl = "/")
+        {
+            ViewBag.ReturnUrl = returnUrl ?? "/";
+            ViewData["Title"] = "Access Denied";
+            return View();
+        }
+
+
+        private string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashedBytes);
+            }
+        }
     }
 }

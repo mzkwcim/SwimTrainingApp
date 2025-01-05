@@ -10,7 +10,10 @@
 
     public enum UserRole
     {
-        Athlete, Coach, Admin
+        Athlete = 0,
+        Coach = 1,
+        Admin = 2
     }
+
 
 }

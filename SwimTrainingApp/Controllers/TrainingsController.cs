@@ -11,7 +11,6 @@ using SwimTrainingApp.Models;
 
 namespace SwimTrainingApp.Controllers
 {
-    [Authorize]
     public class TrainingsController : Controller
     {
         private readonly AppDbContext _context;
@@ -20,14 +19,12 @@ namespace SwimTrainingApp.Controllers
         {
             _context = context;
         }
-
         public async Task<IActionResult> Index()
         {
             var trainings = await _context.Trainings.ToListAsync();
 
             return View(trainings);
         }
-
 
         public async Task<IActionResult> Details(int? id)
         {
@@ -51,7 +48,6 @@ namespace SwimTrainingApp.Controllers
             ViewBag.Trainings = trainings; 
             return View(training); 
         }
-
         public IActionResult Create()
         {
             var model = new Training
@@ -97,7 +93,6 @@ namespace SwimTrainingApp.Controllers
                 return StatusCode(500, "An error occurred while creating the training.");
             }
         }
-
         public async Task<IActionResult> Edit(int? id)
         {
             var trainings = await _context.Trainings.ToListAsync();
@@ -219,6 +214,7 @@ namespace SwimTrainingApp.Controllers
 
 
         [HttpGet]
+
         public async Task<IActionResult> GetTrainingDetails(int id)
         {
             var training = await _context.Trainings
