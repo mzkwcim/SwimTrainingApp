@@ -4,10 +4,8 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <form method="post" id="deleteForm">
-    <!-- Token CSRF -->
     @Html.AntiForgeryToken()
 
-    <!-- Lista rozwijana treningów -->
     <div class="form-group">
         <label for="trainingSelect">Select Training to Delete:</label>
         <select id="trainingSelect" name="Id" class="form-control">

@@ -51,21 +51,24 @@ namespace SwimTrainingApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Coach,Athlete")]
-        public IActionResult Create(List<Attendance> attendances)
+        [Authorize(Roles = "Admin,Coach")]
+        public IActionResult Create()
         {
-            if (ModelState.IsValid)
+            var trainings = _context.Trainings.ToList();
+            if (!trainings.Any())
             {
-                foreach (var attendance in attendances)
-                {
-                    _context.Attendances.Add(attendance);
-                }
-                _context.SaveChanges();
-                return RedirectToAction(nameof(Index));
+                ViewBag.Message = "No trainings available.";
+                ViewBag.Trainings = new List<Training>();
+                return View();
             }
 
-            return View(attendances);
+            ViewBag.Trainings = trainings;
+
+            ViewBag.Users = _context.Users.Where(u => u.Role == UserRole.Athlete).ToList();
+
+            return View();
         }
+
         [Authorize(Roles = "Admin,Coach,Athlete")]
         public IActionResult Details(int? TrainingId)
         {

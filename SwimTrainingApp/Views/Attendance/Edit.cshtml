@@ -25,6 +25,7 @@
 @if (Model != null && Model.Count > 0)
 {
     <form method="post" asp-action="Edit">
+        @Html.AntiForgeryToken()
         <input type="hidden" name="TrainingId" value="@ViewBag.SelectedTrainingId" />
 
         <table class="table">

@@ -8,6 +8,7 @@
 <h2>Attendance by Date Range</h2>
 
 <form method="get" asp-action="ViewByDateRange">
+    @Html.AntiForgeryToken()
     <div class="form-group">
         <label for="startDate">Start Date:</label>
         <input type="date" id="startDate" name="startDate" class="form-control" value="@ViewContext.HttpContext.Request.Query["startDate"]" />
