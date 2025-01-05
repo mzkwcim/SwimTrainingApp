@@ -1,0 +1,67 @@
+﻿@model List<SwimTrainingApp.Models.Attendance>
+
+@{
+    ViewData["Title"] = "Edit Attendance";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Edit Attendance</h2>
+
+<!-- Formularz do wyboru treningu -->
+<form method="get" asp-action="Edit">
+    <div class="form-group">
+        <label for="trainingSelect">Select Training:</label>
+        <select id="trainingSelect" name="TrainingId" class="form-control" onchange="this.form.submit()">
+            <option value="" disabled selected>Select a training...</option>
+            @foreach (var training in (List<SwimTrainingApp.Models.Training>)ViewBag.Trainings)
+            {
+                <option value="@training.Id" @(ViewBag.SelectedTraining?.Id == training.Id ? "selected" : "")>
+                    @training.Date.ToShortDateString()
+                </option>
+            }
+        </select>
+    </div>
+</form>
+
+@if (Model != null && Model.Count > 0)
+{
+    <!-- Formularz edycji obecności -->
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+
+        <!-- Hidden field for TrainingId -->
+        <input type="hidden" name="TrainingId" value="@ViewBag.SelectedTraining.Id" />
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Athlete</th>
+                    <th>Is Present</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            <!-- Rzutowanie ViewBag.Users na List<User> -->
+                            @((ViewBag.Users as List<SwimTrainingApp.Models.User>)
+                                .FirstOrDefault(u => u.Id == Model[i].AthleteId)?.Username)
+                            <input type="hidden" name="Attendances[@i].AthleteId" value="@Model[i].AthleteId" />
+                        </td>
+                        <td>
+                            <input type="checkbox" name="Attendances[@i].IsPresent" @(Model[i].IsPresent ? "checked" : "") />
+                            <input type="hidden" name="Attendances[@i].Id" value="@Model[i].Id" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
+}
+else if (ViewBag.SelectedTraining != null)
+{
+    <p>No attendance records found for this training.</p>
+}

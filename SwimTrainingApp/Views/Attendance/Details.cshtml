@@ -1,0 +1,54 @@
+﻿@model List<SwimTrainingApp.Models.Attendance>
+
+@{
+    ViewData["Title"] = "Attendance Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Attendance Details</h2>
+
+<!-- Formularz do wyboru treningu -->
+<form method="get" asp-action="Details">
+    <div class="form-group">
+        <label for="trainingSelect">Select Training:</label>
+        <select id="trainingSelect" name="TrainingId" class="form-control" onchange="this.form.submit()">
+            <option value="" disabled selected>Select a training...</option>
+            @foreach (var training in (List<SwimTrainingApp.Models.Training>)ViewBag.Trainings)
+            {
+                <option value="@training.Id" @(ViewBag.SelectedTraining?.Id == training.Id ? "selected" : "")>
+                    @training.Date.ToShortDateString()
+                </option>
+            }
+        </select>
+    </div>
+</form>
+
+@if (Model != null && Model.Count > 0)
+{
+    <h4>Attendance for Training on @ViewBag.SelectedTraining.Date.ToShortDateString()</h4>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Athlete</th>
+                <th>Is Present</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var attendance in Model)
+            {
+                <tr>
+                    <td>
+                        @((ViewBag.Users as List<SwimTrainingApp.Models.User>)
+                            .FirstOrDefault(u => u.Id == attendance.AthleteId)?.Username)
+                    </td>
+                    <td>@(attendance.IsPresent ? "Yes" : "No")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (ViewBag.SelectedTraining != null)
+{
+    <p>No attendance records found for this training.</p>
+}

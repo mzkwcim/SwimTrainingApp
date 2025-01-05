@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Attendance Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Attendance Management</h2>
+
+<div class="list-group">
+    <a href="@Url.Action("Create", "Attendance")" class="list-group-item list-group-item-action btn btn-primary">
+        Create Attendance Table
+    </a>
+    <a href="@Url.Action("Details", "Attendance")" class="list-group-item list-group-item-action btn btn-info">
+        View Attendance Table
+    </a>
+    <a href="@Url.Action("Edit", "Attendance")" class="list-group-item list-group-item-action btn btn-warning">
+        Edit Attendance Table
+    </a>
+    <a href="@Url.Action("Delete", "Attendance")" class="list-group-item list-group-item-action btn btn-danger">
+        Delete Attendance Table
+    </a>
+</div>
