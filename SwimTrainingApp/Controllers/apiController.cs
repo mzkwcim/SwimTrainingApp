@@ -25,14 +25,12 @@ namespace SwimTrainingApp.Controllers
         [HttpPost("GenerateToken")]
         public IActionResult GenerateToken([FromBody] LoginRequest request)
         {
-            // Walidacja danych logowania użytkownika
             var user = ValidateUser(request.Username, request.Password);
             if (user == null)
             {
                 return Unauthorized(new { Message = "Invalid username or password." });
             }
 
-            // Tworzenie tokena JWT
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
             var claims = new[]
             {
@@ -59,7 +57,6 @@ namespace SwimTrainingApp.Controllers
 
         private User ValidateUser(string username, string password)
         {
-            // Sprawdzenie poprawności użytkownika w bazie danych
             var hashedPassword = HashPassword(password);
             return _context.Users.FirstOrDefault(u => u.Username == username && u.Password == hashedPassword);
         }
