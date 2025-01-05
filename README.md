@@ -91,16 +91,18 @@ Umożliwia wprowadzenie zmian w istniejących wpisach dotyczących frekwencji.
 Usuwa wybrane wpisy dotyczące frekwencji.
 
 3. Statystyki
-Sekcja statystyk umożliwia analizę danych dotyczących treningów i uczestników. Dostępne statystyki:
+Sekcja statystyk umożliwia analizę danych dotyczących treningów osób z rolą athlete. Dostępne statystyki:
 
     • Rozkład typów zadań
 Przedstawia podział zadań.
 
     • Statystyki zadań dla uczestników
-Wyświetla dane o zadaniach wykonanych przez poszczególnych uczestników.
+Wyświetla dane o zadaniach wykonanych przez osób z rolą athlete.
 
     • Całkowite statystyki zadań
 Podsumowanie wszystkich zadań wykonanych w systemie, przedstawiające ogólny obraz aktywności.
+
+    Uwaga: Wyświetlanie statystyk jest dostępne wyłącznie dla osób z rolą athlete.
 
 4. Zmiana ról użytkowników
 Program umożliwia zmianę ról użytkowników.
