@@ -22,7 +22,8 @@ namespace SwimTrainingApp.Data
             modelBuilder.Entity<TrainingTask>()
                 .HasOne(t => t.Training) // Nawigacja z `TrainingTask` do `Training`
                 .WithMany(tr => tr.Tasks)  // Nawigacja z `Training` do `TrainingTask`
-                .HasForeignKey(t => t.TrainingId); // Klucz obcy
+                .HasForeignKey(t => t.TrainingId) // Klucz obcy
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
 

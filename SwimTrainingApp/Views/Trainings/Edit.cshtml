@@ -1,17 +1,16 @@
 ﻿@model SwimTrainingApp.Models.Training
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Training";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <h2>Edit Training Tasks</h2>
 
-
-<form method="get" asp-action="Edit">
+<!-- Formularz wyboru treningu -->
+<form method="get" asp-action="Edit" id="selectTrainingForm">
     <div class="form-group">
         <label for="trainingSelect">Select Training:</label>
-
         <select id="trainingSelect" name="id" class="form-control" onchange="this.form.submit()">
             <option value="" disabled selected>Select a training...</option>
             @foreach (var training in ViewBag.Trainings as List<SwimTrainingApp.Models.Training>)
@@ -24,16 +23,16 @@
     </div>
 </form>
 
+<!-- Sekcja edycji treningu -->
 @if (Model != null)
 {
     <h4>Tasks for Training on @Model.Date.ToShortDateString()</h4>
 
-    <!-- Formularz edycji -->
     <form id="editForm">
         <!-- Token CSRF -->
         @Html.AntiForgeryToken()
 
-        <!-- Ukryte pole dla ID treningu -->
+        <!-- Ukryte pola dla ID treningu -->
         <input type="hidden" name="Id" value="@Model.Id" />
         <input type="hidden" name="Date" value="@Model.Date.ToString("yyyy-MM-dd")" />
 
@@ -41,7 +40,7 @@
         <div id="tasks-container">
             @for (int i = 0; i < Model.Tasks.Count; i++)
             {
-                <div class="task-item mb-3">
+                <div class="task-item mb-3" data-task-index="@i">
                     <input type="hidden" name="Tasks[@i].Id" value="@Model.Tasks[i].Id" />
 
                     <div class="form-group">
@@ -73,18 +72,93 @@
                             }
                         </select>
                     </div>
+
+                    <!-- Przycisk usuwania taska -->
+                    <button type="button" class="btn btn-danger delete-task">Delete Task</button>
                 </div>
                 <hr />
             }
         </div>
 
-        <button type="button" class="btn btn-primary" id="saveChanges">Save</button>
+        <!-- Przycisk dodawania nowego taska -->
+        <button type="button" class="btn btn-secondary mb-3" id="addTask">Add New Task</button>
+
+        <!-- Przycisk zapisu -->
+        <button type="button" class="btn btn-primary" id="saveChanges">Save Changes</button>
     </form>
 }
 
 @section Scripts {
     <script>
-                       document.getElementById("saveChanges").addEventListener("click", async function () {
+        let taskIndex = @Model?.Tasks.Count ?? 0;
+
+        // Dodawanie nowego taska
+        document.getElementById("addTask")?.addEventListener("click", function () {
+            const taskContainer = document.getElementById("tasks-container");
+
+            const newTaskHtml = `
+                <div class="task-item mb-3" data-task-index="${taskIndex}">
+                    <input type="hidden" name="Tasks[${taskIndex}].Id" value="0" />
+
+                    <div class="form-group">
+                        <label for="Tasks_${taskIndex}_TrainingSection">Section:</label>
+                        <input id="Tasks_${taskIndex}_TrainingSection" name="Tasks[${taskIndex}].TrainingSection"
+                               class="form-control" value="" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Tasks_${taskIndex}_TaskDescription">Description:</label>
+                        <input id="Tasks_${taskIndex}_TaskDescription" name="Tasks[${taskIndex}].TaskDescription"
+                               class="form-control" value="" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Tasks_${taskIndex}_Distance">Distance:</label>
+                        <input id="Tasks_${taskIndex}_Distance" name="Tasks[${taskIndex}].Distance"
+                               class="form-control" value="0" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Tasks_${taskIndex}_TaskType">Type:</label>
+                        <select id="Tasks_${taskIndex}_TaskType" name="Tasks[${taskIndex}].TaskType" class="form-control">
+        @foreach (var taskType in Enum.GetValues(typeof(SwimTrainingApp.Models.TaskType)))
+        {
+                                    <option value="@taskType">@taskType</option>
+        }
+                        </select>
+                    </div>
+
+                    <!-- Przycisk usuwania taska -->
+                    <button type="button" class="btn btn-danger delete-task">Delete Task</button>
+                </div>
+                <hr />
+            `;
+
+            taskContainer.insertAdjacentHTML("beforeend", newTaskHtml);
+            taskIndex++;
+        });
+
+        // Usuwanie istniejącego taska
+        document.addEventListener("click", function (event) {
+            if (event.target.classList.contains("delete-task")) {
+                const taskItem = event.target.closest(".task-item");
+                taskItem.remove();
+
+                // Zaktualizuj indeksy dla pozostałych tasków
+                const taskItems = document.querySelectorAll("#tasks-container .task-item");
+                taskItems.forEach((item, index) => {
+                    item.querySelectorAll("[name]").forEach((input) => {
+                        const name = input.name;
+                        const updatedName = name.replace(/\[\d+\]/, `[${index}]`);
+                        input.name = updatedName;
+                    });
+                });
+            }
+        });
+
+
+        // Zapis zmian
+        document.getElementById("saveChanges")?.addEventListener("click", async function () {
             const trainingId = document.querySelector("input[name='Id']").value;
             const trainingDate = document.querySelector("input[name='Date']").value;
 
@@ -129,4 +203,3 @@
         });
     </script>
 }
-

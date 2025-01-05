@@ -141,49 +141,73 @@ namespace SwimTrainingApp.Controllers
         }
 
         [HttpPatch]
-        public async Task<IActionResult> Edit([FromBody] Training model)
+        public async Task<IActionResult> Edit(int id, [FromBody] Training updatedTraining)
         {
-            if (model == null || model.Id <= 0)
+            if (id != updatedTraining.Id)
             {
-                return BadRequest("Invalid training data.");
+                return BadRequest("Training ID mismatch.");
             }
 
-            var training = await _context.Trainings
+            // Pobranie istniejącego treningu z bazy danych
+            var existingTraining = await _context.Trainings
                 .Include(t => t.Tasks)
-                .FirstOrDefaultAsync(t => t.Id == model.Id);
+                .FirstOrDefaultAsync(t => t.Id == id);
 
-            if (training == null)
+            if (existingTraining == null)
             {
                 return NotFound("Training not found.");
             }
 
-            // Aktualizacja daty
-            training.Date = model.Date;
+            // Aktualizacja daty treningu
+            existingTraining.Date = updatedTraining.Date;
 
-            // Aktualizacja zadań
-            foreach (var updatedTask in model.Tasks)
+            // Aktualizacja, dodawanie i usuwanie tasków
+            foreach (var updatedTask in updatedTraining.Tasks)
             {
-                var existingTask = training.Tasks.FirstOrDefault(t => t.Id == updatedTask.Id);
+                var existingTask = existingTraining.Tasks.FirstOrDefault(t => t.Id == updatedTask.Id);
+
                 if (existingTask != null)
                 {
+                    // Aktualizacja istniejącego taska
                     existingTask.TrainingSection = updatedTask.TrainingSection;
                     existingTask.TaskDescription = updatedTask.TaskDescription;
                     existingTask.Distance = updatedTask.Distance;
                     existingTask.TaskType = updatedTask.TaskType;
                 }
+                else
+                {
+                    // Dodanie nowego taska
+                    existingTraining.Tasks.Add(new TrainingTask
+                    {
+                        TrainingSection = updatedTask.TrainingSection,
+                        TaskDescription = updatedTask.TaskDescription,
+                        Distance = updatedTask.Distance,
+                        TaskType = updatedTask.TaskType,
+                        TrainingId = existingTraining.Id
+                    });
+                }
             }
 
+            // Usunięcie tasków, które nie są już w zaktualizowanym treningu
+            var tasksToRemove = existingTraining.Tasks
+                .Where(existingTask => !updatedTraining.Tasks.Any(updatedTask => updatedTask.Id == existingTask.Id))
+                .ToList();
+
+            _context.TrainingTasks.RemoveRange(tasksToRemove);
+
+            // Zapis zmian w bazie danych
             try
             {
                 await _context.SaveChangesAsync();
-                return Ok(new { success = true, message = "Training updated successfully." });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error saving training: {ex.Message}");
-                return StatusCode(500, "An error occurred while saving changes.");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+
+            return Ok("Training updated successfully!");
         }
+
 
 
 
