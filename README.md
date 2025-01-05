@@ -57,3 +57,50 @@ W terminalu, przejdź do folderu projektu i uruchom poniższe komendy, aby zaktu
     dotnet ef migrations add InitialCreate
     dotnet ef database update   
 I dzięki temu w ssms powinno Ci się wszystko stworzyć na bazie modeli
+
+### Instrukcja obsługi
+
+1. Tabela treningów
+Tabela treningów pozwala na zarządzanie informacjami dotyczącymi treningów. Dostępne funkcje:
+
+    • Stwórz trening
+Umożliwia dodanie nowego treningu do systemu.
+
+    • Sprawdź trening
+Wyświetla szczegóły istniejących treningów.
+
+    • Edytuj trening
+Umożliwia wprowadzenie zmian w istniejących treningach,
+
+    • Usuń trening
+Usuwa wybrany trening z systemu.
+
+2. Tabela frekwencji
+Tabela frekwencji pozwala monitorować obecność uczestników na treningach. Dostępne funkcje:
+
+    • Stwórz frekwencję
+Dodaje nowy wpis dotyczący frekwencji dla konkretnego treningu.
+    
+    • Sprawdź frekwencję
+Wyświetla dane o obecności uczestników na treningach.
+
+    •Edytuj frekwencję
+Umożliwia wprowadzenie zmian w istniejących wpisach dotyczących frekwencji.
+
+    • Usuń frekwencję
+Usuwa wybrane wpisy dotyczące frekwencji.
+
+3. Statystyki
+Sekcja statystyk umożliwia analizę danych dotyczących treningów i uczestników. Dostępne statystyki:
+
+    • Rozkład typów zadań
+Przedstawia podział zadań.
+
+    • Statystyki zadań dla uczestników
+Wyświetla dane o zadaniach wykonanych przez poszczególnych uczestników.
+
+    • Całkowite statystyki zadań
+Podsumowanie wszystkich zadań wykonanych w systemie, przedstawiające ogólny obraz aktywności.
+
+4. Zmiana ról użytkowników
+Program umożliwia zmianę ról użytkowników.
