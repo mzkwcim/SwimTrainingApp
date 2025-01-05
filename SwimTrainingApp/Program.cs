@@ -6,6 +6,10 @@ using SwimTrainingApp.Validation;
 using System.Globalization;
 using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using SwimTrainingApp.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var cultureInfo = new CultureInfo("en-US");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
@@ -13,7 +17,7 @@ CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
            .EnableSensitiveDataLogging()
@@ -25,6 +29,26 @@ builder.Services.AddControllersWithViews()
         options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
     });
+
+var key = builder.Configuration["Jwt:Key"]; 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+    };
+});
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -51,8 +75,63 @@ builder.Services.AddSwaggerGen(c =>
 
 
 var app = builder.Build();
+app.UseAuthentication();
+app.UseAuthorization();
 
-// Configure the HTTP request pipeline.
+app.MapGet("/api/users", async (AppDbContext dbContext) =>
+{
+    return await dbContext.Users.ToListAsync();
+}).WithTags("Users");
+
+app.MapGet("/api/users/{id}", async (AppDbContext dbContext, int id) =>
+{
+    var user = await dbContext.Users.FindAsync(id);
+    return user == null ? Results.NotFound() : Results.Ok(user);
+});
+
+app.MapPost("/api/users", async (AppDbContext dbContext, User user) =>
+{
+    dbContext.Users.Add(user);
+    await dbContext.SaveChangesAsync();
+    return Results.Created($"/api/users/{user.Id}", user);
+});
+
+app.MapPut("/api/users/{id}", async (AppDbContext dbContext, int id, User updatedUser) =>
+{
+    var user = await dbContext.Users.FindAsync(id);
+    if (user == null)
+    {
+        return Results.NotFound();
+    }
+
+    user.Username = updatedUser.Username;
+    user.Password = updatedUser.Password; 
+    user.Role = updatedUser.Role;
+
+    await dbContext.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+app.MapDelete("/api/users/{id}", async (AppDbContext dbContext, int id) =>
+{
+    var user = await dbContext.Users.FindAsync(id);
+    if (user == null)
+    {
+        return Results.NotFound();
+    }
+
+    dbContext.Users.Remove(user);
+    await dbContext.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+app.MapGet("/api/secure-data", () =>
+{
+    return "This is secured data";
+}).RequireAuthorization();
+
+
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -65,8 +144,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",

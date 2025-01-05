@@ -17,7 +17,6 @@ namespace SwimTrainingApp.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure Attendance -> Training relationship
             modelBuilder.Entity<Attendance>()
                 .HasOne(a => a.Training)
                 .WithMany(t => t.Attendances)

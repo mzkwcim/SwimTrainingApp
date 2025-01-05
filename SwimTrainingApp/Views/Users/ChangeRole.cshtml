@@ -40,11 +40,9 @@
         const userSelect = document.getElementById("userId");
         const roleSelect = document.getElementById("newRole");
 
-        // Get selected user's current role from the dropdown
         const selectedUserOption = userSelect.options[userSelect.selectedIndex];
         const currentRole = selectedUserOption.getAttribute("data-role");
 
-        // Set the role dropdown to the current role
         Array.from(roleSelect.options).forEach(option => {
             if (option.value === currentRole) {
                 option.selected = true;

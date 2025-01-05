@@ -7,7 +7,7 @@
 
 <h2>Delete Attendance</h2>
 
-<!-- Formularz do wyboru treningu -->
+
 <form method="get" asp-action="Delete">
     <div class="form-group">
         <label for="trainingSelect">Select Training:</label>
@@ -48,7 +48,6 @@
         </tbody>
     </table>
 
-    <!-- Formularz potwierdzenia usunięcia -->
     <form method="post" asp-action="Delete">
         @Html.AntiForgeryToken()
 

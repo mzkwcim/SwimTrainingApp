@@ -7,7 +7,7 @@ namespace SwimTrainingApp.Models
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }
-        public ICollection<Attendance> Attendances { get; set; } // Navigation property
+        public ICollection<Attendance> Attendances { get; set; } 
         public List<TrainingTask> Tasks { get; set; } = new List<TrainingTask>();
     }
 

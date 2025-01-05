@@ -4,13 +4,12 @@
     ViewData["Title"] = "Edit Attendance";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    // Explicitly cast ViewBag.Users to a List<User> for Razor to work properly
     var users = ViewBag.Users as List<SwimTrainingApp.Models.User>;
 }
 
 <h2>Edit Attendance</h2>
 
-<!-- Dropdown to select training -->
+
 <form method="get" asp-action="Edit">
     <div class="form-group">
         <label for="trainingSelect">Select Training:</label>
@@ -29,7 +28,6 @@
 @if (Model != null && Model.Count > 0)
 {
     <form method="post" asp-action="Edit">
-        <!-- Hidden field for TrainingId -->
         <input type="hidden" name="TrainingId" value="@ViewBag.SelectedTrainingId" />
 
         <table class="table">

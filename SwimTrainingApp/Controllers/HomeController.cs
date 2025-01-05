@@ -61,7 +61,7 @@ namespace SwimTrainingApp.Controllers
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role.ToString()) // Ensure the Role is added as a claim
+                new Claim(ClaimTypes.Role, user.Role.ToString()) 
             };
 
             var identity = new ClaimsIdentity(claims, "Cookies");
@@ -112,7 +112,7 @@ namespace SwimTrainingApp.Controllers
             {
                 Username = username,
                 Password = hashedPassword,
-                Role = UserRole.Athlete // Default role is Athlete
+                Role = UserRole.Athlete 
             };
 
             _db.Users.Add(newUser);

@@ -7,7 +7,7 @@
 
 <h2>Create Attendance</h2>
 
-<!-- Formularz do wyboru treningu -->
+
 <form method="get" asp-action="Create">
     <div class="form-group">
         <label for="trainingSelect">Select Training:</label>
@@ -27,7 +27,7 @@
 {
     <h4>Attendance for Training on @ViewBag.SelectedTraining.Date.ToShortDateString()</h4>
 
-    <!-- Formularz do zapisu obecności -->
+
     <form method="post" asp-action="Create">
         @Html.AntiForgeryToken()
 
@@ -43,7 +43,7 @@
                 {
                     <tr>
                         <td>
-                            <!-- Rzutowanie ViewBag.Users na List<User> -->
+
                             @((ViewBag.Users as List<SwimTrainingApp.Models.User>)
                                 .FirstOrDefault(u => u.Id == Model[i].AthleteId)?.Username)
                             <input type="hidden" name="[@i].AthleteId" value="@Model[i].AthleteId" />

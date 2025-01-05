@@ -229,7 +229,7 @@ namespace SwimTrainingApp.Controllers
             return Json(new
             {
                 id = training.Id,
-                date = training.Date.ToString("yyyy-MM-ddTHH:mm"), // Format dla datetime-local
+                date = training.Date.ToString("yyyy-MM-ddTHH:mm"), 
                 tasks = training.Tasks.Select(t => new
                 {
                     trainingSection = t.TrainingSection,
