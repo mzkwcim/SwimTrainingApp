@@ -118,5 +118,34 @@ namespace SwimTrainingApp.Controllers
                 TaskDistribution = taskDistribution
             });
         }
+
+        [HttpGet]
+        public IActionResult TotalTaskStats()
+        {
+            var tasks = _context.TrainingTasks.ToList();
+
+            if (!tasks.Any())
+            {
+                return View(new List<TaskTypeStats>());
+            }
+
+            var totalDistance = tasks.Sum(t => t.Distance);
+
+            var taskStatistics = tasks
+                .GroupBy(t => t.TaskType)
+                .Select(g => new TaskTypeStats
+                {
+                    TaskType = g.Key.ToString(),
+                    TotalDistance = g.Sum(t => t.Distance),
+                    Percentage = (g.Sum(t => t.Distance) / (double)totalDistance) * 100
+                })
+                .ToList();
+
+            ViewBag.TotalDistanceMeters = totalDistance;
+            ViewBag.TotalDistanceKilometers = totalDistance / 1000.0;
+
+            return View(taskStatistics);
+        }
+
     }
 }

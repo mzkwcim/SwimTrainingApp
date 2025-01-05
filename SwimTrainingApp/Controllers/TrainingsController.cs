@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using SwimTrainingApp.Models;
 
 namespace SwimTrainingApp.Controllers
 {
+    [Authorize]
     public class TrainingsController : Controller
     {
         private readonly AppDbContext _context;
@@ -19,33 +21,26 @@ namespace SwimTrainingApp.Controllers
             _context = context;
         }
 
-        // GET: Trainings
         public async Task<IActionResult> Index()
         {
-            // Pobierz wszystkie treningi z bazy danych
             var trainings = await _context.Trainings.ToListAsync();
 
-            // Przekaż listę treningów do widoku
             return View(trainings);
         }
 
 
-        // GET: Trainings/Details
         public async Task<IActionResult> Details(int? id)
         {
-            // Pobierz wszystkie treningi
             var trainings = await _context.Trainings.ToListAsync();
 
-            // Jeśli `id` jest null, wyświetl tylko listę treningów bez szczegółów
             if (id == null)
             {
-                ViewBag.Trainings = trainings; // Przekazanie listy treningów do widoku
+                ViewBag.Trainings = trainings; 
                 return View();
             }
 
-            // Pobierz szczegóły treningu na podstawie `id`
             var training = await _context.Trainings
-                .Include(t => t.Tasks) // Pobierz powiązane zadania
+                .Include(t => t.Tasks) 
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (training == null)
@@ -53,20 +48,17 @@ namespace SwimTrainingApp.Controllers
                 return NotFound();
             }
 
-            ViewBag.Trainings = trainings; // Przekazanie listy treningów do widoku
-            return View(training); // Przekazanie szczegółowego treningu do widoku
+            ViewBag.Trainings = trainings; 
+            return View(training); 
         }
-
-
 
         public IActionResult Create()
         {
             var model = new Training
             {
-                Tasks = new List<TrainingTask> { new TrainingTask() } // Jedno domyślne zadanie
+                Tasks = new List<TrainingTask> { new TrainingTask() } 
             };
 
-            // Wczytaj komunikaty z TempData, jeśli istnieją
             ViewBag.Message = TempData["Message"];
             ViewBag.IsSuccess = TempData["IsSuccess"];
             return View(model);
@@ -75,17 +67,14 @@ namespace SwimTrainingApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Training training)
         {
-            // Sprawdzenie, czy obiekt Training został poprawnie przesłany
             if (training == null)
             {
                 Console.WriteLine("Training object is null.");
                 return BadRequest("Training object is null.");
             }
 
-            // Logowanie daty do konsoli
             Console.WriteLine($"Received Date: {training.Date}");
 
-            // Logowanie listy zadań (opcjonalnie)
             if (training.Tasks != null)
             {
                 Console.WriteLine($"Number of Tasks: {training.Tasks.Count}");
@@ -97,7 +86,6 @@ namespace SwimTrainingApp.Controllers
 
             try
             {
-                // Dodanie treningu do bazy danych
                 _context.Trainings.Add(training);
                 await _context.SaveChangesAsync();
 
@@ -110,8 +98,6 @@ namespace SwimTrainingApp.Controllers
             }
         }
 
-
-        // GET: Trainings/Edit
         public async Task<IActionResult> Edit(int? id)
         {
             var trainings = await _context.Trainings.ToListAsync();
@@ -148,7 +134,6 @@ namespace SwimTrainingApp.Controllers
                 return BadRequest("Training ID mismatch.");
             }
 
-            // Pobranie istniejącego treningu z bazy danych
             var existingTraining = await _context.Trainings
                 .Include(t => t.Tasks)
                 .FirstOrDefaultAsync(t => t.Id == id);
@@ -158,17 +143,14 @@ namespace SwimTrainingApp.Controllers
                 return NotFound("Training not found.");
             }
 
-            // Aktualizacja daty treningu
             existingTraining.Date = updatedTraining.Date;
 
-            // Aktualizacja, dodawanie i usuwanie tasków
             foreach (var updatedTask in updatedTraining.Tasks)
             {
                 var existingTask = existingTraining.Tasks.FirstOrDefault(t => t.Id == updatedTask.Id);
 
                 if (existingTask != null)
                 {
-                    // Aktualizacja istniejącego taska
                     existingTask.TrainingSection = updatedTask.TrainingSection;
                     existingTask.TaskDescription = updatedTask.TaskDescription;
                     existingTask.Distance = updatedTask.Distance;
@@ -176,7 +158,6 @@ namespace SwimTrainingApp.Controllers
                 }
                 else
                 {
-                    // Dodanie nowego taska
                     existingTraining.Tasks.Add(new TrainingTask
                     {
                         TrainingSection = updatedTask.TrainingSection,
@@ -188,14 +169,12 @@ namespace SwimTrainingApp.Controllers
                 }
             }
 
-            // Usunięcie tasków, które nie są już w zaktualizowanym treningu
             var tasksToRemove = existingTraining.Tasks
                 .Where(existingTask => !updatedTraining.Tasks.Any(updatedTask => updatedTask.Id == existingTask.Id))
                 .ToList();
 
             _context.TrainingTasks.RemoveRange(tasksToRemove);
 
-            // Zapis zmian w bazie danych
             try
             {
                 await _context.SaveChangesAsync();
@@ -229,10 +208,8 @@ namespace SwimTrainingApp.Controllers
                 return NotFound("Training not found.");
             }
 
-            // Usuń wszystkie zadania związane z treningiem
             _context.TrainingTasks.RemoveRange(training.Tasks);
 
-            // Usuń trening
             _context.Trainings.Remove(training);
 
             await _context.SaveChangesAsync();
@@ -241,7 +218,6 @@ namespace SwimTrainingApp.Controllers
         }
 
 
-        // API: Trainings/GetTrainingDetails/5
         [HttpGet]
         public async Task<IActionResult> GetTrainingDetails(int id)
         {

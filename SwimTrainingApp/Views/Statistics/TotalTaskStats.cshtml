@@ -1,0 +1,37 @@
+﻿@model List<SwimTrainingApp.Models.TaskTypeStats>
+
+<h2>Total Task Statistics</h2>
+@{
+    ViewData["Title"] = "Total Task Statistics";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div>
+    <p><strong>Total Distance:</strong> @ViewBag.TotalDistanceMeters meters (@ViewBag.TotalDistanceKilometers.ToString("F2") kilometers)</p>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Task Type</th>
+                <th>Total Distance (km)</th>
+                <th>Percentage (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var task in Model)
+            {
+                <tr>
+                    <td>@task.TaskType</td>
+                    <td>@(task.TotalDistance)</td> <!-- Corrected formatting for kilometers -->
+                    <td>@task.Percentage</td> <!-- Corrected formatting for percentage -->
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No tasks found in the system.</p>
+}

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -19,14 +20,12 @@ namespace SwimTrainingApp.Controllers
             _context = context;
         }
 
-        // Index - lista linków
         public IActionResult Index()
         {
             ViewBag.Trainings = _context.Trainings.ToList();
             return View();
         }
 
-        // Widok tworzenia listy obecności
         public IActionResult Create(int? TrainingId)
         {
             ViewBag.Trainings = _context.Trainings.ToList();
@@ -67,7 +66,6 @@ namespace SwimTrainingApp.Controllers
             return View(attendances);
         }
 
-        // Szczegóły obecności
         public IActionResult Details(int? TrainingId)
         {
             ViewBag.Trainings = _context.Trainings.ToList();
@@ -89,24 +87,22 @@ namespace SwimTrainingApp.Controllers
 
         public IActionResult Edit(int? TrainingId)
         {
-            ViewBag.Trainings = _context.Trainings.ToList(); // Populate trainings dropdown
+            ViewBag.Trainings = _context.Trainings.ToList(); 
 
             if (TrainingId == null)
             {
-                return View(); // Render the view with just the dropdown
+                return View(); 
             }
 
-            // Retrieve attendance for the selected training
             var attendances = _context.Attendances.Where(a => a.TrainingId == TrainingId).ToList();
 
             if (attendances.Count == 0)
             {
-                // Optionally, you can handle cases where no attendance exists
                 ViewBag.Message = "No attendance records found for this training.";
             }
 
             ViewBag.SelectedTrainingId = TrainingId;
-            ViewBag.Users = _context.Users.Where(u => u.Role == UserRole.Athlete).ToList(); // List of athletes
+            ViewBag.Users = _context.Users.Where(u => u.Role == UserRole.Athlete).ToList(); 
 
             return View(attendances);
         }
@@ -126,20 +122,19 @@ namespace SwimTrainingApp.Controllers
                 }
 
                 _context.SaveChanges();
-                return RedirectToAction("Index"); // Redirect to the index page after successful save
+                return RedirectToAction("Index"); 
             }
 
             ViewBag.Trainings = _context.Trainings.ToList();
             ViewBag.Users = _context.Users.Where(u => u.Role == UserRole.Athlete).ToList();
             ViewBag.SelectedTrainingId = TrainingId;
 
-            return View(Attendances); // Return view with validation errors
+            return View(Attendances); 
         }
 
         [HttpGet]
         public IActionResult ViewByDateRange(DateTime? startDate, DateTime? endDate)
         {
-            // Fetch trainings in the selected date range
             var trainings = _context.Trainings
                 .Where(t => (!startDate.HasValue || t.Date >= startDate) &&
                             (!endDate.HasValue || t.Date <= endDate))
@@ -151,20 +146,16 @@ namespace SwimTrainingApp.Controllers
                 return View(new List<AttendanceStatsViewModel>());
             }
 
-            // Get IDs of the trainings
             var trainingIds = trainings.Select(t => t.Id).ToList();
 
-            // Fetch attendances for those trainings
             var attendances = _context.Attendances
                 .Where(a => trainingIds.Contains(a.TrainingId))
                 .ToList();
 
-            // Get all athletes
             var athletes = _context.Users
                 .Where(u => u.Role == UserRole.Athlete)
                 .ToList();
 
-            // Calculate attendance stats
             var attendanceStats = athletes.Select(athlete =>
             {
                 var athleteAttendances = attendances.Where(a => a.AthleteId == athlete.Id).ToList();
@@ -184,7 +175,6 @@ namespace SwimTrainingApp.Controllers
 
             return View(attendanceStats);
         }
-
 
 
 

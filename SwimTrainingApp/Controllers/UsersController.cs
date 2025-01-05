@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -19,10 +20,12 @@ namespace SwimTrainingApp.Controllers
             _context = context;
         }
 
+
         public async Task<IActionResult> Index()
         {
             return View(await _context.Users.ToListAsync());
         }
+
 
         public async Task<IActionResult> Details(int? id)
         {
@@ -41,6 +44,7 @@ namespace SwimTrainingApp.Controllers
             return View(user);
         }
 
+
         public IActionResult Create()
         {
             return View();
@@ -48,6 +52,7 @@ namespace SwimTrainingApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> Create([Bind("Id,Username,Password,Role")] User user)
         {
             if (ModelState.IsValid)
@@ -140,6 +145,55 @@ namespace SwimTrainingApp.Controllers
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.Id == id);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ChangeRole()
+        {
+            var users = await _context.Users.ToListAsync();
+            var availableRoles = Enum.GetValues(typeof(UserRole)).Cast<UserRole>().ToList();
+
+            var model = new ChangeRoleViewModel
+            {
+                Users = users,
+                AvailableRoles = availableRoles
+            };
+
+            return View(model);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeRole(int userId, string newRole)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            if (Enum.TryParse(typeof(UserRole), newRole, true, out var parsedRole))
+            {
+                user.Role = (UserRole)parsedRole;
+            }
+            else
+            {
+                ModelState.AddModelError("", "Invalid role selected.");
+                return RedirectToAction(nameof(ChangeRole));
+            }
+
+            try
+            {
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                ModelState.AddModelError("", "An error occurred while updating the role.");
+            }
+
+            return RedirectToAction(nameof(ChangeRole));
         }
     }
 }

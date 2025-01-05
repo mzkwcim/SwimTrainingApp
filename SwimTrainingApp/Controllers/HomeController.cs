@@ -9,7 +9,6 @@ using System.Text;
 
 namespace SwimTrainingApp.Controllers
 {
-    [Authorize] 
     public class HomeController : Controller
     {
         private readonly AppDbContext _db;
@@ -42,10 +41,8 @@ namespace SwimTrainingApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
         {
-            // Hash the entered password
             string hashedPassword = HashPassword(password);
 
-            // Check if a user exists with the provided username and hashed password
             var user = _db.Users.FirstOrDefault(u => u.Username == username && u.Password == hashedPassword);
 
             if (user == null)
@@ -54,7 +51,6 @@ namespace SwimTrainingApp.Controllers
                 return View();
             }
 
-            // Create claims and sign in the user
             var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Username),
@@ -78,7 +74,7 @@ namespace SwimTrainingApp.Controllers
         [HttpGet]
         public IActionResult Register()
         {
-            return View(); // Render the registration form
+            return View(); 
         }
 
         private string HashPassword(string password)
@@ -90,10 +86,9 @@ namespace SwimTrainingApp.Controllers
             }
         }
 
-        // Update Register method
         [AllowAnonymous]
         [HttpPost]
-        public IActionResult Register(string username, string password, UserRole role)
+        public IActionResult Register(string username, string password)
         {
             if (_db.Users.Any(u => u.Username == username))
             {
@@ -106,8 +101,8 @@ namespace SwimTrainingApp.Controllers
             var newUser = new User
             {
                 Username = username,
-                Password = hashedPassword, // Save the hashed password
-                Role = role
+                Password = hashedPassword, 
+                Role = UserRole.Athlete
             };
 
             _db.Users.Add(newUser);
