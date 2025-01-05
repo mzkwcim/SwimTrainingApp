@@ -1,22 +1,18 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Serialization;
 using SwimTrainingApp.Data;
+using SwimTrainingApp.Models;
 using SwimTrainingApp.Validation;
 using System.Globalization;
-using Newtonsoft.Json.Serialization;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using SwimTrainingApp.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 var cultureInfo = new CultureInfo("en-US");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
@@ -30,32 +26,16 @@ builder.Services.AddControllersWithViews()
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
     });
 
-var key = builder.Configuration["Jwt:Key"]; 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
-    };
-});
-
+// Dodanie uwierzytelniania opartego na ciasteczkach
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Home/Login";
         options.LogoutPath = "/Home/Logout";
         options.AccessDeniedPath = "/Home/AccessDenied";
+        options.Cookie.HttpOnly = true; // Zapobiega dostêpowi do ciasteczek z JavaScript
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Wymaga HTTPS
+        options.Cookie.SameSite = SameSiteMode.Strict; // Chroni przed atakami CSRF
     });
 
 builder.Services.AddAuthorization();
@@ -71,13 +51,32 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1"
     });
 });
-
-
-
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("CoachOnly", policy => policy.RequireRole("Coach"));
+    options.AddPolicy("AthleteOnly", policy => policy.RequireRole("Athlete"));
+});
 var app = builder.Build();
+
+app.UseStaticFiles();
+app.UseRouting();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "SwimTrainingAPI v1");
+        c.RoutePrefix = "swagger";
+    });
+}
+
+// Middleware dla uwierzytelniania i autoryzacji
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Punkty koñcowe API
 app.MapGet("/api/users", async (AppDbContext dbContext) =>
 {
     return await dbContext.Users.ToListAsync();
@@ -105,7 +104,7 @@ app.MapPut("/api/users/{id}", async (AppDbContext dbContext, int id, User update
     }
 
     user.Username = updatedUser.Username;
-    user.Password = updatedUser.Password; 
+    user.Password = updatedUser.Password;
     user.Role = updatedUser.Role;
 
     await dbContext.SaveChangesAsync();
@@ -129,21 +128,6 @@ app.MapGet("/api/secure-data", () =>
 {
     return "This is secured data";
 }).RequireAuthorization();
-
-
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "SwimTrainingAPI v1");
-        c.RoutePrefix = "swagger";
-    });
-}
-
-app.UseStaticFiles();
-app.UseRouting();
 
 app.MapControllerRoute(
     name: "default",

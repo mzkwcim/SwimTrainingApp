@@ -48,8 +48,10 @@ namespace SwimTrainingApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
         {
+            
             string hashedPassword = HashPassword(password);
 
+          
             var user = _db.Users.FirstOrDefault(u => u.Username == username && u.Password == hashedPassword);
 
             if (user == null)
@@ -58,19 +60,27 @@ namespace SwimTrainingApp.Controllers
                 return View();
             }
 
+            
+            string roleName = ((UserRole)user.Role).ToString();
+
+           
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role.ToString()) 
+                new Claim(ClaimTypes.Name, user.Id.ToString()), 
+                new Claim(ClaimTypes.GivenName, user.Username), 
+                new Claim(ClaimTypes.Role, roleName) 
             };
+
 
             var identity = new ClaimsIdentity(claims, "Cookies");
             var principal = new ClaimsPrincipal(identity);
+
 
             await HttpContext.SignInAsync(principal);
 
             return RedirectToAction("Index");
         }
+
 
         public async Task<IActionResult> Logout()
         {

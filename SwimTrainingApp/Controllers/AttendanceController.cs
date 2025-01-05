@@ -19,11 +19,13 @@ namespace SwimTrainingApp.Controllers
         {
             _context = context;
         }
+        [Authorize(Roles = "Admin,Coach,Athelete")]
         public IActionResult Index()
         {
             ViewBag.Trainings = _context.Trainings.ToList();
             return View();
         }
+        [Authorize(Roles = "Admin,Coach")]
         public IActionResult Create(int? TrainingId)
         {
             ViewBag.Trainings = _context.Trainings.ToList();
@@ -49,6 +51,7 @@ namespace SwimTrainingApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public IActionResult Create(List<Attendance> attendances)
         {
             if (ModelState.IsValid)
@@ -63,10 +66,36 @@ namespace SwimTrainingApp.Controllers
 
             return View(attendances);
         }
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public IActionResult Details(int? TrainingId)
         {
             ViewBag.Trainings = _context.Trainings.ToList();
-            ViewBag.Users = _context.Users.Where(u => u.Role == UserRole.Athlete).ToList();
+
+            if (TrainingId == null)
+            {
+                return View(new List<Attendance>());
+            }
+
+            var attendanceList = _context.Attendances
+                .Include(a => a.Training) 
+                .ToList();
+
+            var users = _context.Users.ToDictionary(u => u.Id, u => u.Username);
+            ViewBag.UsersMap = users;
+
+            var filteredAttendance = attendanceList
+                .Where(a => a.TrainingId == TrainingId)
+                .ToList();
+
+            ViewBag.SelectedTraining = _context.Trainings.FirstOrDefault(t => t.Id == TrainingId);
+
+            return View(filteredAttendance);
+        }
+        [HttpGet]
+        [Authorize(Roles = "Admin,Coach")]
+        public IActionResult Edit(int? TrainingId)
+        {
+            ViewBag.Trainings = _context.Trainings.ToList();
 
             if (TrainingId == null)
             {
@@ -77,58 +106,41 @@ namespace SwimTrainingApp.Controllers
                 .Where(a => a.TrainingId == TrainingId)
                 .ToList();
 
-            ViewBag.SelectedTraining = _context.Trainings.FirstOrDefault(t => t.Id == TrainingId);
+            var users = _context.Users.ToDictionary(u => u.Id, u => u.Username);
+            ViewBag.UsersMap = users;
+
+            ViewBag.SelectedTrainingId = TrainingId;
 
             return View(attendanceList);
         }
-        public IActionResult Edit(int? TrainingId)
-        {
-            ViewBag.Trainings = _context.Trainings.ToList(); 
-
-            if (TrainingId == null)
-            {
-                return View(); 
-            }
-
-            var attendances = _context.Attendances.Where(a => a.TrainingId == TrainingId).ToList();
-
-            if (attendances.Count == 0)
-            {
-                ViewBag.Message = "No attendance records found for this training.";
-            }
-
-            ViewBag.SelectedTrainingId = TrainingId;
-            ViewBag.Users = _context.Users.Where(u => u.Role == UserRole.Athlete).ToList(); 
-
-            return View(attendances);
-        }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Coach")]
         public IActionResult Edit(int TrainingId, List<Attendance> Attendances)
         {
-            if (ModelState.IsValid)
+            if (Attendances == null || Attendances.Count == 0)
             {
-                foreach (var attendance in Attendances)
-                {
-                    var existingAttendance = _context.Attendances.FirstOrDefault(a => a.Id == attendance.Id);
-                    if (existingAttendance != null)
-                    {
-                        existingAttendance.IsPresent = attendance.IsPresent;
-                    }
-                }
-
-                _context.SaveChanges();
-                return RedirectToAction("Index"); 
+                return RedirectToAction(nameof(Edit), new { TrainingId });
             }
 
-            ViewBag.Trainings = _context.Trainings.ToList();
-            ViewBag.Users = _context.Users.Where(u => u.Role == UserRole.Athlete).ToList();
-            ViewBag.SelectedTrainingId = TrainingId;
+            foreach (var attendance in Attendances)
+            {
+                var existingAttendance = _context.Attendances.FirstOrDefault(a => a.Id == attendance.Id);
+                if (existingAttendance != null)
+                {
+                    existingAttendance.IsPresent = attendance.IsPresent;
+                }
+            }
 
-            return View(Attendances); 
+            _context.SaveChanges();
+
+            return RedirectToAction(nameof(Edit), new { TrainingId });
         }
 
+
         [HttpGet]
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public IActionResult ViewByDateRange(DateTime? startDate, DateTime? endDate)
         {
             var trainings = _context.Trainings
@@ -173,6 +185,7 @@ namespace SwimTrainingApp.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         public IActionResult Delete(int? TrainingId)
         {
             ViewBag.Trainings = _context.Trainings.ToList();
@@ -194,6 +207,7 @@ namespace SwimTrainingApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public IActionResult DeleteConfirmed(int TrainingId)
         {
             var attendanceList = _context.Attendances.Where(a => a.TrainingId == TrainingId).ToList();

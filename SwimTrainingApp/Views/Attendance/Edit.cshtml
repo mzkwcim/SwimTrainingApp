@@ -3,19 +3,16 @@
 @{
     ViewData["Title"] = "Edit Attendance";
     Layout = "~/Views/Shared/_Layout.cshtml";
-
-    var users = ViewBag.Users as List<SwimTrainingApp.Models.User>;
 }
 
 <h2>Edit Attendance</h2>
-
 
 <form method="get" asp-action="Edit">
     <div class="form-group">
         <label for="trainingSelect">Select Training:</label>
         <select id="trainingSelect" name="TrainingId" class="form-control" onchange="this.form.submit()">
             <option value="" disabled selected>Select a training...</option>
-            @foreach (var training in ViewBag.Trainings as List<SwimTrainingApp.Models.Training>)
+            @foreach (var training in (List<SwimTrainingApp.Models.Training>)ViewBag.Trainings)
             {
                 <option value="@training.Id" @(ViewBag.SelectedTrainingId != null && (int)ViewBag.SelectedTrainingId == training.Id ? "selected" : "")>
                     @training.Date.ToShortDateString()
@@ -40,11 +37,9 @@
             <tbody>
                 @for (int i = 0; i < Model.Count; i++)
                 {
-                    var athlete = users?.FirstOrDefault(u => u.Id == Model[i].AthleteId);
-
                     <tr>
                         <td>
-                            @athlete?.Username
+                            @ViewBag.UsersMap[Model[i].AthleteId]
                             <input type="hidden" name="Attendances[@i].AthleteId" value="@Model[i].AthleteId" />
                         </td>
                         <td>

@@ -9,21 +9,27 @@
     </div>
     <div class="card-body">
         <ul class="list-group">
-            <li class="list-group-item">
-                <a href="@Url.Action("TaskTypeDistribution", "Statistics")" class="list-group-item list-group-item-action btn btn-primary">
-                    Task Type Distribution
-                </a>
-            </li>
-            <li class="list-group-item">
-                <a href="@Url.Action("AthleteTaskStats", "Statistics")" class="list-group-item list-group-item-action btn btn-primary">
-                    Athlete Task Statistics
-                </a>
-            </li>
-            <li class="list-group-item">
-                <a href="@Url.Action("TotalTaskStats", "Statistics")" class="list-group-item list-group-item-action btn btn-primary">
-                    Total Task Statistics
-                </a>
-            </li>
+            @if (User.Identity.IsAuthenticated)
+            {
+                @if (User.IsInRole("Admin") || User.IsInRole("Coach") || User.IsInRole("Athlete"))
+                {
+                    <li class="list-group-item">
+                        <a href="@Url.Action("TaskTypeDistribution", "Statistics")" class="list-group-item list-group-item-action btn btn-primary">
+                            Task Type Distribution
+                        </a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="@Url.Action("AthleteTaskStats", "Statistics")" class="list-group-item list-group-item-action btn btn-primary">
+                            Athlete Task Statistics
+                        </a>
+                    </li>
+                    <li class="list-group-item">
+                            <a href="@Url.Action("TotalTaskStats", "Statistics")" class="list-group-item list-group-item-action btn btn-primary">
+                        Total Task Statistics
+                        </a>
+                    </li>
+                }
+            }
         </ul>
     </div>
 </div>

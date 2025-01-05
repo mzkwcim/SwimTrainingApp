@@ -19,13 +19,14 @@ namespace SwimTrainingApp.Controllers
         {
             _context = context;
         }
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public async Task<IActionResult> Index()
         {
             var trainings = await _context.Trainings.ToListAsync();
 
             return View(trainings);
         }
-
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public async Task<IActionResult> Details(int? id)
         {
             var trainings = await _context.Trainings.ToListAsync();
@@ -48,6 +49,7 @@ namespace SwimTrainingApp.Controllers
             ViewBag.Trainings = trainings; 
             return View(training); 
         }
+        [Authorize(Roles = "Admin,Coach")]
         public IActionResult Create()
         {
             var model = new Training
@@ -60,7 +62,9 @@ namespace SwimTrainingApp.Controllers
             return View(model);
         }
 
+
         [HttpPost]
+        [Authorize(Roles = "Admin,Coach")]
         public async Task<IActionResult> Create([FromBody] Training training)
         {
             if (training == null)
@@ -93,6 +97,7 @@ namespace SwimTrainingApp.Controllers
                 return StatusCode(500, "An error occurred while creating the training.");
             }
         }
+        [Authorize(Roles = "Admin,Coach")]
         public async Task<IActionResult> Edit(int? id)
         {
             var trainings = await _context.Trainings.ToListAsync();
@@ -122,6 +127,7 @@ namespace SwimTrainingApp.Controllers
         }
 
         [HttpPatch]
+        [Authorize(Roles = "Admin,Coach")]
         public async Task<IActionResult> Edit(int id, [FromBody] Training updatedTraining)
         {
             if (id != updatedTraining.Id)
@@ -186,6 +192,7 @@ namespace SwimTrainingApp.Controllers
 
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public IActionResult Delete()
         {
             ViewBag.Trainings = _context.Trainings.ToList();
@@ -194,6 +201,7 @@ namespace SwimTrainingApp.Controllers
 
 
         [HttpDelete]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var training = await _context.Trainings.Include(t => t.Tasks).FirstOrDefaultAsync(t => t.Id == id);
@@ -214,7 +222,7 @@ namespace SwimTrainingApp.Controllers
 
 
         [HttpGet]
-
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public async Task<IActionResult> GetTrainingDetails(int id)
         {
             var training = await _context.Trainings

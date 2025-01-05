@@ -6,19 +6,34 @@
 <h2>Attendance Management</h2>
 
 <div class="list-group">
-    <a href="@Url.Action("Create", "Attendance")" class="list-group-item list-group-item-action btn btn-primary">
-        Create Attendance Table
-    </a>
-    <a href="@Url.Action("Details", "Attendance")" class="list-group-item list-group-item-action btn btn-info">
-        View Attendance Table
-    </a>
-    <a href="@Url.Action("ViewByDateRange", "Attendance")" class="list-group-item list-group-item-action btn btn-danger">
-        View Attendance Table By Date
-    </a>
-    <a href="@Url.Action("Edit", "Attendance")" class="list-group-item list-group-item-action btn btn-warning">
-        Edit Attendance Table
-    </a>
-    <a href="@Url.Action("Delete", "Attendance")" class="list-group-item list-group-item-action btn btn-danger">
-        Delete Attendance Table
-    </a>
+    @if (User.Identity.IsAuthenticated)
+    {
+        @if (User.IsInRole("Admin") || User.IsInRole("Coach") || User.IsInRole("Athlete"))
+        {
+            <a href="@Url.Action("Details", "Attendance")" class="list-group-item list-group-item-action btn btn-info">
+                View Attendance Table
+            </a>
+            <a href="@Url.Action("ViewByDateRange", "Attendance")" class="list-group-item list-group-item-action btn btn-danger">
+                View Attendance Table By Date
+            </a>
+        }
+        @if (User.IsInRole("Admin") || User.IsInRole("Coach"))
+        {
+            <a href="@Url.Action("Create", "Attendance")
+            " class="list-group-item list-group-item-action btn btn-primary">
+                Create Attendance Table
+            </a>
+            <a href="@Url.Action("Edit", "Attendance")" class="list-group-item list-group-item-action btn btn-warning">
+                Edit Attendance Table
+            </a>
+        }
+        @if (User.IsInRole("Admin"))
+        {
+            <a href="@Url.Action("Delete", "Attendance")
+            " class="list-group-item list-group-item-action btn btn-danger">
+                Delete Attendance Table
+            </a>
+        }
+
+    }
 </div>

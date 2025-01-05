@@ -7,7 +7,6 @@
 
 <h2>Attendance Details</h2>
 
-
 <form method="get" asp-action="Details">
     <div class="form-group">
         <label for="trainingSelect">Select Training:</label>
@@ -39,8 +38,9 @@
             {
                 <tr>
                     <td>
-                        @((ViewBag.Users as List<SwimTrainingApp.Models.User>)
-                            .FirstOrDefault(u => u.Id == attendance.AthleteId)?.Username)
+                        @((ViewBag.UsersMap.ContainsKey(attendance.AthleteId)
+                            ? ViewBag.UsersMap[attendance.AthleteId]
+                            : "Unknown Athlete"))
                     </td>
                     <td>@(attendance.IsPresent ? "Yes" : "No")</td>
                 </tr>

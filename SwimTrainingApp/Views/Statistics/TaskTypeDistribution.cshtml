@@ -1,7 +1,7 @@
 ﻿@model List<SwimTrainingApp.Models.TaskStatsViewModel>
 
 @{
-    ViewData["Title"] = "Task Type Dystribiution";
+    ViewData["Title"] = "Task Type Distribution";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -12,7 +12,7 @@
         <label for="athleteSelect">Select Athlete:</label>
         <select id="athleteSelect" name="athleteId" class="form-control">
             <option value="" disabled selected>Select an athlete...</option>
-            @foreach (var athlete in ViewBag.Athletes)
+            @foreach (var athlete in ViewBag.Athletes as List<SwimTrainingApp.Models.User>)
             {
                 <option value="@athlete.Id">@athlete.Username</option>
             }
@@ -61,4 +61,3 @@ else
 {
     <p>No task statistics found for the selected filters.</p>
 }
-

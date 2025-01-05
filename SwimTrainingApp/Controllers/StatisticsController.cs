@@ -19,18 +19,20 @@ namespace SwimTrainingApp.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public IActionResult Index()
         {
             return View();
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public IActionResult TaskTypeDistribution(int? athleteId, DateTime? startDate, DateTime? endDate)
         {
+
             ViewBag.Athletes = _context.Users
                 .Where(u => u.Role == UserRole.Athlete)
-                .Select(a => new { a.Id, a.Username })
-                .ToList();
+                .ToList(); 
 
             if (!athleteId.HasValue || !startDate.HasValue || !endDate.HasValue)
             {
@@ -62,12 +64,13 @@ namespace SwimTrainingApp.Controllers
             return View(distribution);
         }
 
+
         [HttpGet]
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public IActionResult AthleteTaskStats(int? athleteId, DateTime? startDate, DateTime? endDate)
         {
             ViewBag.Athletes = _context.Users
                 .Where(u => u.Role == UserRole.Athlete)
-                .Select(a => new { a.Id, a.Username })
                 .ToList();
 
             if (!athleteId.HasValue || !startDate.HasValue || !endDate.HasValue)
@@ -120,7 +123,9 @@ namespace SwimTrainingApp.Controllers
             });
         }
 
+
         [HttpGet]
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public IActionResult TotalTaskStats()
         {
             var tasks = _context.TrainingTasks.ToList();

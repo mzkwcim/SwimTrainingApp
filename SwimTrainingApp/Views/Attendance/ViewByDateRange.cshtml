@@ -18,7 +18,6 @@
     <button type="submit" class="btn btn-primary">Search</button>
 </form>
 
-
 @if (Model != null && Model.Count > 0)
 {
     <table class="table">
@@ -34,7 +33,7 @@
             @foreach (var stat in Model)
             {
                 <tr>
-                    <td>@stat.Athlete.Username</td>
+                    <td>@stat.Athlete.Username</td> <!-- Pobranie Username -->
                     <td>@stat.PresentCount</td>
                     <td>@stat.TotalTrainings</td>
                     <td>@stat.Percentage %</td>
