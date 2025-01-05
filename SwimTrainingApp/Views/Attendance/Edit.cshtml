@@ -3,19 +3,22 @@
 @{
     ViewData["Title"] = "Edit Attendance";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Explicitly cast ViewBag.Users to a List<User> for Razor to work properly
+    var users = ViewBag.Users as List<SwimTrainingApp.Models.User>;
 }
 
 <h2>Edit Attendance</h2>
 
-<!-- Formularz do wyboru treningu -->
+<!-- Dropdown to select training -->
 <form method="get" asp-action="Edit">
     <div class="form-group">
         <label for="trainingSelect">Select Training:</label>
         <select id="trainingSelect" name="TrainingId" class="form-control" onchange="this.form.submit()">
             <option value="" disabled selected>Select a training...</option>
-            @foreach (var training in (List<SwimTrainingApp.Models.Training>)ViewBag.Trainings)
+            @foreach (var training in ViewBag.Trainings as List<SwimTrainingApp.Models.Training>)
             {
-                <option value="@training.Id" @(ViewBag.SelectedTraining?.Id == training.Id ? "selected" : "")>
+                <option value="@training.Id" @(ViewBag.SelectedTrainingId != null && (int)ViewBag.SelectedTrainingId == training.Id ? "selected" : "")>
                     @training.Date.ToShortDateString()
                 </option>
             }
@@ -25,12 +28,9 @@
 
 @if (Model != null && Model.Count > 0)
 {
-    <!-- Formularz edycji obecności -->
-    <form asp-action="Edit" method="post">
-        @Html.AntiForgeryToken()
-
+    <form method="post" asp-action="Edit">
         <!-- Hidden field for TrainingId -->
-        <input type="hidden" name="TrainingId" value="@ViewBag.SelectedTraining.Id" />
+        <input type="hidden" name="TrainingId" value="@ViewBag.SelectedTrainingId" />
 
         <table class="table">
             <thead>
@@ -42,15 +42,15 @@
             <tbody>
                 @for (int i = 0; i < Model.Count; i++)
                 {
+                    var athlete = users?.FirstOrDefault(u => u.Id == Model[i].AthleteId);
+
                     <tr>
                         <td>
-                            <!-- Rzutowanie ViewBag.Users na List<User> -->
-                            @((ViewBag.Users as List<SwimTrainingApp.Models.User>)
-                                .FirstOrDefault(u => u.Id == Model[i].AthleteId)?.Username)
+                            @athlete?.Username
                             <input type="hidden" name="Attendances[@i].AthleteId" value="@Model[i].AthleteId" />
                         </td>
                         <td>
-                            <input type="checkbox" name="Attendances[@i].IsPresent" @(Model[i].IsPresent ? "checked" : "") />
+                            <input type="checkbox" name="Attendances[@i].IsPresent" value="true" @(Model[i].IsPresent ? "checked" : "") />
                             <input type="hidden" name="Attendances[@i].Id" value="@Model[i].Id" />
                         </td>
                     </tr>
@@ -60,8 +60,4 @@
 
         <button type="submit" class="btn btn-primary">Save Changes</button>
     </form>
-}
-else if (ViewBag.SelectedTraining != null)
-{
-    <p>No attendance records found for this training.</p>
 }

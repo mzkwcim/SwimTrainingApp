@@ -2,13 +2,10 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using SwimTrainingApp.Data;
-using SwimTrainingApp.Models;
 using SwimTrainingApp.Validation;
-using SwimTrainingApp.Services;
 using System.Globalization;
 using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 
 var cultureInfo = new CultureInfo("en-US");
 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
@@ -38,8 +35,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorization();
+
 builder.Services.AddValidatorsFromAssemblyContaining<TrainingValidator>();
-builder.Services.AddScoped<AuditLogService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

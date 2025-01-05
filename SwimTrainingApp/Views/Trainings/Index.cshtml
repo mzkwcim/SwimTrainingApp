@@ -7,18 +7,18 @@
 
 <h2>Training Management</h2>
 
-<ul class="list-group">
-    <li class="list-group-item">
-        <a asp-action="Create" class="btn btn-primary">Create Training Table</a>
-    </li>
-    <li class="list-group-item">
-        <a asp-action="Details" class="btn btn-info">View Training Table</a>
-    </li>
-    <li class="list-group-item">
-        <a asp-action="Edit" class="btn btn-warning">Edit Training Table</a>
-    </li>
-    <li class="list-group-item">
-        <a asp-action="Delete" class="btn btn-danger">Delete Training Table</a>
-    </li>
-</ul>
+<div class="list-group">
+    <a href="@Url.Action("Create", "Trainings")" class="list-group-item list-group-item-action btn btn-primary">
+        Create Attendance Table
+    </a>
+    <a href="@Url.Action("Details", "Trainings")" class="list-group-item list-group-item-action btn btn-info">
+        View Attendance Table
+    </a>
+    <a href="@Url.Action("Edit", "Trainings")" class="list-group-item list-group-item-action btn btn-warning">
+        Edit Attendance Table
+    </a>
+    <a href="@Url.Action("Delete", "Trainings")" class="list-group-item list-group-item-action btn btn-danger">
+        Delete Attendance Table
+    </a>
+</div>
 

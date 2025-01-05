@@ -87,8 +87,31 @@ namespace SwimTrainingApp.Controllers
             return View(attendanceList);
         }
 
+        public IActionResult Edit(int? TrainingId)
+        {
+            ViewBag.Trainings = _context.Trainings.ToList(); // Populate trainings dropdown
+
+            if (TrainingId == null)
+            {
+                return View(); // Render the view with just the dropdown
+            }
+
+            // Retrieve attendance for the selected training
+            var attendances = _context.Attendances.Where(a => a.TrainingId == TrainingId).ToList();
+
+            if (attendances.Count == 0)
+            {
+                // Optionally, you can handle cases where no attendance exists
+                ViewBag.Message = "No attendance records found for this training.";
+            }
+
+            ViewBag.SelectedTrainingId = TrainingId;
+            ViewBag.Users = _context.Users.Where(u => u.Role == UserRole.Athlete).ToList(); // List of athletes
+
+            return View(attendances);
+        }
+
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public IActionResult Edit(int TrainingId, List<Attendance> Attendances)
         {
             if (ModelState.IsValid)
@@ -96,7 +119,6 @@ namespace SwimTrainingApp.Controllers
                 foreach (var attendance in Attendances)
                 {
                     var existingAttendance = _context.Attendances.FirstOrDefault(a => a.Id == attendance.Id);
-
                     if (existingAttendance != null)
                     {
                         existingAttendance.IsPresent = attendance.IsPresent;
@@ -104,15 +126,67 @@ namespace SwimTrainingApp.Controllers
                 }
 
                 _context.SaveChanges();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index"); // Redirect to the index page after successful save
             }
 
             ViewBag.Trainings = _context.Trainings.ToList();
-            ViewBag.SelectedTraining = _context.Trainings.FirstOrDefault(t => t.Id == TrainingId);
             ViewBag.Users = _context.Users.Where(u => u.Role == UserRole.Athlete).ToList();
+            ViewBag.SelectedTrainingId = TrainingId;
 
-            return View(Attendances);
+            return View(Attendances); // Return view with validation errors
         }
+
+        [HttpGet]
+        public IActionResult ViewByDateRange(DateTime? startDate, DateTime? endDate)
+        {
+            // Fetch trainings in the selected date range
+            var trainings = _context.Trainings
+                .Where(t => (!startDate.HasValue || t.Date >= startDate) &&
+                            (!endDate.HasValue || t.Date <= endDate))
+                .ToList();
+
+            if (!trainings.Any())
+            {
+                ViewBag.Message = "No trainings found in the selected date range.";
+                return View(new List<AttendanceStatsViewModel>());
+            }
+
+            // Get IDs of the trainings
+            var trainingIds = trainings.Select(t => t.Id).ToList();
+
+            // Fetch attendances for those trainings
+            var attendances = _context.Attendances
+                .Where(a => trainingIds.Contains(a.TrainingId))
+                .ToList();
+
+            // Get all athletes
+            var athletes = _context.Users
+                .Where(u => u.Role == UserRole.Athlete)
+                .ToList();
+
+            // Calculate attendance stats
+            var attendanceStats = athletes.Select(athlete =>
+            {
+                var athleteAttendances = attendances.Where(a => a.AthleteId == athlete.Id).ToList();
+                int totalTrainings = trainings.Count;
+                int presentCount = athleteAttendances.Count(a => a.IsPresent);
+
+                return new AttendanceStatsViewModel
+                {
+                    Athlete = athlete,
+                    TotalTrainings = totalTrainings,
+                    PresentCount = presentCount,
+                    Percentage = totalTrainings > 0
+                        ? Math.Round((double)presentCount / totalTrainings * 100, 2)
+                        : 0
+                };
+            }).ToList();
+
+            return View(attendanceStats);
+        }
+
+
+
 
         public IActionResult Delete(int? TrainingId)
         {

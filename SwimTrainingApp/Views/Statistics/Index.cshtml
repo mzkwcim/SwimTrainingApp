@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Statistics Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h3>Statistics Reports</h3>
+    </div>
+    <div class="card-body">
+        <ul class="list-group">
+            <li class="list-group-item">
+                <a href="@Url.Action("TaskTypeDistribution", "Statistics")" class="list-group-item list-group-item-action btn btn-primary">
+                    Task Type Distribution
+                </a>
+            </li>
+            <li class="list-group-item">
+                <a href="@Url.Action("AthleteTaskStats", "Statistics")" class="list-group-item list-group-item-action btn btn-primary">
+                    Athlete Task Statistics
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
