@@ -1,120 +1,132 @@
 ﻿@model SwimTrainingApp.Models.Training
 
 @{
-    ViewData["Title"] = "Edit Training";
-}
-@{
+    ViewData["Title"] = "Edit";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Edit Training</h1>
+<h2>Edit Training Tasks</h2>
 
-<div class="form-group">
-    <label for="training-selector">Select a Training</label>
-    <select id="training-selector" class="form-control">
-        <option value="">-- Select a Training --</option>
-        @foreach (var training in ViewBag.TrainingList)
-        {
-            <option value="@training.Id">@training.Date.ToString("yyyy-MM-dd HH:mm")</option>
-        }
-    </select>
-</div>
 
-<!-- Formularz edycji treningu -->
-<div id="edit-form" style="display: none;">
-    <form asp-action="Edit" method="post">
-        <input type="hidden" id="training-id" name="Id" />
+<form method="get" asp-action="Edit">
+    <div class="form-group">
+        <label for="trainingSelect">Select Training:</label>
 
-        <div class="form-group">
-            <label asp-for="Date" class="control-label"></label>
-            <input asp-for="Date" id="training-date" type="datetime-local" class="form-control" />
-            <span asp-validation-for="Date" class="text-danger"></span>
-        </div>
+        <select id="trainingSelect" name="id" class="form-control" onchange="this.form.submit()">
+            <option value="" disabled selected>Select a training...</option>
+            @foreach (var training in ViewBag.Trainings as List<SwimTrainingApp.Models.Training>)
+            {
+                <option value="@training.Id" @(Model != null && Model.Id == training.Id ? "selected" : "")>
+                    @training.Date.ToShortDateString()
+                </option>
+            }
+        </select>
+    </div>
+</form>
 
-        <h3>Tasks</h3>
+@if (Model != null)
+{
+    <h4>Tasks for Training on @Model.Date.ToShortDateString()</h4>
+
+    <!-- Formularz edycji -->
+    <form id="editForm">
+        <!-- Token CSRF -->
+        @Html.AntiForgeryToken()
+
+        <!-- Ukryte pole dla ID treningu -->
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <input type="hidden" name="Date" value="@Model.Date.ToString("yyyy-MM-dd")" />
+
+        <!-- Kontener dla zadań -->
         <div id="tasks-container">
-            <!-- Kontener dla dynamicznie ładowanych zadań -->
+            @for (int i = 0; i < Model.Tasks.Count; i++)
+            {
+                <div class="task-item mb-3">
+                    <input type="hidden" name="Tasks[@i].Id" value="@Model.Tasks[i].Id" />
+
+                    <div class="form-group">
+                        <label for="Tasks_@(i)_TrainingSection">Section:</label>
+                        <input id="Tasks_@(i)_TrainingSection" name="Tasks[@i].TrainingSection"
+                               class="form-control" value="@Model.Tasks[i].TrainingSection" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Tasks_@(i)_TaskDescription">Description:</label>
+                        <input id="Tasks_@(i)_TaskDescription" name="Tasks[@i].TaskDescription"
+                               class="form-control" value="@Model.Tasks[i].TaskDescription" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Tasks_@(i)_Distance">Distance:</label>
+                        <input id="Tasks_@(i)_Distance" name="Tasks[@i].Distance"
+                               class="form-control" value="@Model.Tasks[i].Distance" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Tasks_@(i)_TaskType">Type:</label>
+                        <select id="Tasks_@(i)_TaskType" name="Tasks[@i].TaskType" class="form-control">
+                            @foreach (var taskType in Enum.GetValues(typeof(SwimTrainingApp.Models.TaskType)))
+                            {
+                                <option value="@taskType" @(taskType.ToString() == Model.Tasks[i].TaskType.ToString() ? "selected" : "")>
+                                    @taskType
+                                </option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <hr />
+            }
         </div>
 
-        <div class="form-group">
-            <input type="submit" value="Save Changes" class="btn btn-success" />
-        </div>
+        <button type="button" class="btn btn-primary" id="saveChanges">Save</button>
     </form>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+}
 
 @section Scripts {
     <script>
-        document.getElementById("training-selector").addEventListener("change", async function () {
-            const selectedId = this.value;
-            const editForm = document.getElementById("edit-form");
+                       document.getElementById("saveChanges").addEventListener("click", async function () {
+            const trainingId = document.querySelector("input[name='Id']").value;
+            const trainingDate = document.querySelector("input[name='Date']").value;
 
-            if (selectedId) {
-                // Pobierz dane treningu z serwera
-                const response = await fetch(`/Trainings/GetTrainingDetails/${selectedId}`);
-                const training = await response.json();
+            const tasks = Array.from(document.querySelectorAll("#tasks-container .task-item")).map((task, index) => ({
+                Id: task.querySelector(`input[name="Tasks[${index}].Id"]`).value,
+                TrainingSection: task.querySelector(`input[name="Tasks[${index}].TrainingSection"]`).value,
+                TaskDescription: task.querySelector(`input[name="Tasks[${index}].TaskDescription"]`).value,
+                Distance: parseInt(task.querySelector(`input[name="Tasks[${index}].Distance"]`).value),
+                TaskType: task.querySelector(`select[name="Tasks[${index}].TaskType"]`).value
+            }));
 
-                // Wypełnij formularz
-                document.getElementById("training-id").value = training.id;
-                document.getElementById("training-date").value = training.date;
+            const payload = {
+                Id: parseInt(trainingId),
+                Date: trainingDate,
+                Tasks: tasks
+            };
 
-                // Wyczyszczenie kontenera zadań
-                const tasksContainer = document.getElementById("tasks-container");
-                tasksContainer.innerHTML = "";
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
-                // Dodanie zadań do formularza
-                training.tasks.forEach((task, index) => {
-                    const taskHtml = `
-                        <div class="task-item">
-                            <h4>Task ${index + 1}</h4>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>Section</label>
-                                        <input type="text" name="Tasks[${index}].TrainingSection" class="form-control" value="${task.trainingSection}" />
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>Description</label>
-                                        <input type="text" name="Tasks[${index}].TaskDescription" class="form-control" value="${task.taskDescription}" />
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>Distance</label>
-                                        <input type="number" name="Tasks[${index}].Distance" class="form-control" value="${task.distance}" />
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>Task Type</label>
-                                        <select name="Tasks[${index}].TaskType" class="form-control">
-                                            <option value="NN" ${task.taskType === "NN" ? "selected" : ""}>NN</option>
-                                            <option value="RR" ${task.taskType === "RR" ? "selected" : ""}>RR</option>
-                                            <option value="ANC" ${task.taskType === "ANC" ? "selected" : ""}>ANC</option>
-                                            <option value="ANP" ${task.taskType === "ANP" ? "selected" : ""}>ANP</option>
-                                            <option value="AEC1" ${task.taskType === "AEC1" ? "selected" : ""}>AEC1</option>
-                                            <option value="AEC2" ${task.taskType === "AEC2" ? "selected" : ""}>AEC2</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <hr />
-                        </div>
-                    `;
-                    tasksContainer.innerHTML += taskHtml;
+            try {
+                const response = await fetch(`/Trainings/Edit/${trainingId}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": token
+                    },
+                    body: JSON.stringify(payload)
                 });
 
-                // Pokaż formularz
-                editForm.style.display = "block";
-            } else {
-                // Ukryj formularz
-                editForm.style.display = "none";
+                if (response.ok) {
+                    alert("Training updated successfully!");
+                    location.reload();
+                } else {
+                    const errorText = await response.text();
+                    console.error("Server error:", errorText);
+                    alert("Failed to update training. Please check the console for details.");
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+                alert("An error occurred while saving changes.");
             }
         });
     </script>
 }
+

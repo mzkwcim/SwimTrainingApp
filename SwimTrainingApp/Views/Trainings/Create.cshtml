@@ -14,7 +14,8 @@
     @Html.AntiForgeryToken()
     <div class="form-group">
         <label asp-for="Date">Training Date</label>
-        <input asp-for="Date" type="datetime-local" class="form-control" />
+        <input asp-for="Date" type="date" name="Date" class="form-control" />
+        <span asp-validation-for="Date" class="text-danger"></span>
     </div>
 
     <h3>Tasks</h3>
@@ -29,7 +30,7 @@
 
 @section Scripts {
     <script>
-                   document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function () {
             const form = document.getElementById("create-training-form");
             const tasksContainer = document.getElementById("tasks-container");
             const addTaskBtn = document.getElementById("add-task-btn");
@@ -46,25 +47,25 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Section</label>
-                                    <input type="text" name="Tasks[${index}].TrainingSection" class="form-control" />
+                                    <input type="text" name="Tasks[${index}].TrainingSection" class="form-control" required />
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Description</label>
-                                    <input type="text" name="Tasks[${index}].TaskDescription" class="form-control" />
+                                    <input type="text" name="Tasks[${index}].TaskDescription" class="form-control" required />
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Distance</label>
-                                    <input type="number" name="Tasks[${index}].Distance" class="form-control" />
+                                    <input type="number" name="Tasks[${index}].Distance" class="form-control" required />
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Task Type</label>
-                                    <select name="Tasks[${index}].TaskType" class="form-control">
+                                    <select name="Tasks[${index}].TaskType" class="form-control" required>
                                         <option value="">Select Task Type</option>
                                         <option value="NN">NN</option>
                                         <option value="RR">RR</option>
@@ -87,12 +88,21 @@
                 taskIndex++;
             });
 
+            // Obsługa przesyłania formularza
             form.addEventListener("submit", function (e) {
-                e.preventDefault(); // Zapobiega tradycyjnemu wysyłaniu formularza
+                e.preventDefault();
+
+                const dateElement = document.querySelector('input[name="Date"]');
+                if (!dateElement) {
+                    console.error("Date input element not found.");
+                    responseMessage.innerHTML = `<div class="alert alert-danger">Date input is missing.</div>`;
+                    return;
+                }
 
                 const formData = new FormData(form);
 
                 const data = {
+                    Date: dateElement.value,
                     Tasks: []
                 };
 
@@ -103,11 +113,10 @@
                             const index = matches[1];
                             const field = matches[2];
 
+                            data.Tasks = data.Tasks || [];
                             data.Tasks[index] = data.Tasks[index] || {};
                             data.Tasks[index][field] = value;
                         }
-                    } else {
-                        data[key] = value;
                     }
                 });
 
@@ -116,22 +125,19 @@
                     return task.TrainingSection && task.TaskDescription && task.Distance && task.TaskType;
                 });
 
-                console.log("Filtered data to send:", data);
+                console.log("Filtered Tasks to send:", data);
 
-                const csrfTokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
-                const csrfToken = csrfTokenElement ? csrfTokenElement.value : null;
-
-                if (!csrfToken) {
-                    console.error("CSRF token not found in the form.");
+                if (data.Tasks.length === 0) {
+                    console.error("No tasks to send!");
+                    responseMessage.innerHTML = `<div class="alert alert-danger">Please add at least one task.</div>`;
                     return;
                 }
 
-                // Wysyłanie danych AJAX-em
                 fetch('/Trainings/Create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'RequestVerificationToken': csrfToken
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                     },
                     body: JSON.stringify(data)
                 })
@@ -145,14 +151,12 @@
                     if (result.success) {
                         console.log("Success:", result.message);
                         responseMessage.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+                        form.reset();
+                        tasksContainer.innerHTML = "";
+                        taskIndex = 0;
                     } else {
                         console.error("Error:", result.message, result.errors || []);
                         responseMessage.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
-                        if (result.errors) {
-                            result.errors.forEach(err => {
-                                console.error("Validation Error:", err);
-                            });
-                        }
                     }
                 })
                 .catch(error => {
@@ -161,7 +165,5 @@
                 });
             });
         });
-
-
     </script>
 }

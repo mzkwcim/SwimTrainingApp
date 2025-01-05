@@ -18,13 +18,14 @@ namespace SwimTrainingApp.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Konfiguracja relacji między Training a TrainingTask
+            // Relacja 1 do wielu między Training a TrainingTask
             modelBuilder.Entity<TrainingTask>()
-                .HasOne(t => t.Training)
-                .WithMany(t => t.Tasks)
-                .HasForeignKey(t => t.TrainingId)
-                .OnDelete(DeleteBehavior.Cascade); // Zadania są usuwane razem z treningiem
+                .HasOne(t => t.Training) // Nawigacja z `TrainingTask` do `Training`
+                .WithMany(tr => tr.Tasks)  // Nawigacja z `Training` do `TrainingTask`
+                .HasForeignKey(t => t.TrainingId); // Klucz obcy
         }
+
+
 
     }
 }

@@ -22,27 +22,42 @@ namespace SwimTrainingApp.Controllers
         // GET: Trainings
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Trainings.ToListAsync());
+            // Pobierz wszystkie treningi z bazy danych
+            var trainings = await _context.Trainings.ToListAsync();
+
+            // Przekaż listę treningów do widoku
+            return View(trainings);
         }
 
-        // GET: Trainings/Details/5
+
+        // GET: Trainings/Details
         public async Task<IActionResult> Details(int? id)
         {
+            // Pobierz wszystkie treningi
+            var trainings = await _context.Trainings.ToListAsync();
+
+            // Jeśli `id` jest null, wyświetl tylko listę treningów bez szczegółów
             if (id == null)
             {
-                return NotFound();
+                ViewBag.Trainings = trainings; // Przekazanie listy treningów do widoku
+                return View();
             }
 
+            // Pobierz szczegóły treningu na podstawie `id`
             var training = await _context.Trainings
-                .Include(t => t.Tasks)
+                .Include(t => t.Tasks) // Pobierz powiązane zadania
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (training == null)
             {
                 return NotFound();
             }
 
-            return View(training);
+            ViewBag.Trainings = trainings; // Przekazanie listy treningów do widoku
+            return View(training); // Przekazanie szczegółowego treningu do widoku
         }
+
+
 
         public IActionResult Create()
         {
@@ -58,166 +73,149 @@ namespace SwimTrainingApp.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Training training)
+        public async Task<IActionResult> Create([FromBody] Training training)
         {
-            if (ModelState.IsValid)
+            // Sprawdzenie, czy obiekt Training został poprawnie przesłany
+            if (training == null)
             {
-                try
+                Console.WriteLine("Training object is null.");
+                return BadRequest("Training object is null.");
+            }
+
+            // Logowanie daty do konsoli
+            Console.WriteLine($"Received Date: {training.Date}");
+
+            // Logowanie listy zadań (opcjonalnie)
+            if (training.Tasks != null)
+            {
+                Console.WriteLine($"Number of Tasks: {training.Tasks.Count}");
+                foreach (var task in training.Tasks)
                 {
-                    // Zapisz trening, aby wygenerować jego Id
-                    _context.Add(training);
-                    await _context.SaveChangesAsync();
-
-                    // Powiąż każde zadanie z `TrainingId` i zapisz je
-                    foreach (var task in training.Tasks)
-                    {
-                        task.TrainingId = training.Id; // Ustawienie klucza obcego
-                        _context.TrainingTasks.Add(task); // Dodanie zadania do kontekstu
-                    }
-
-                    await _context.SaveChangesAsync(); // Zapisz zadania w bazie danych
-
-                    return Json(new { success = true, message = "Training and tasks created successfully!" });
-                }
-                catch (Exception ex)
-                {
-                    return Json(new { success = false, message = $"An error occurred: {ex.Message}" });
+                    Console.WriteLine($"Task - Description: {task.TaskDescription}, Distance: {task.Distance}");
                 }
             }
 
-            // Obsługa błędów walidacji
-            return Json(new { success = false, message = "Validation failed.", errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList() });
+            try
+            {
+                // Dodanie treningu do bazy danych
+                _context.Trainings.Add(training);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Training created successfully!" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return StatusCode(500, "An error occurred while creating the training.");
+            }
         }
-
-
-
-
 
 
         // GET: Trainings/Edit
-        public async Task<IActionResult> Edit()
+        public async Task<IActionResult> Edit(int? id)
         {
             var trainings = await _context.Trainings.ToListAsync();
-            ViewBag.TrainingList = new SelectList(trainings, "Id", "Date");
+            ViewBag.Trainings = trainings;
+
+            if (id == null)
+            {
+                return View();
+            }
+
+            var training = await _context.Trainings
+                .Include(t => t.Tasks)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (training == null)
+            {
+                return NotFound();
+            }
+
+            Console.WriteLine($"Training ID: {training.Id}, Date: {training.Date}");
+            foreach (var task in training.Tasks)
+            {
+                Console.WriteLine($"Task ID: {task.Id}, Section: {task.TrainingSection}, Description: {task.TaskDescription}, Distance: {task.Distance}, Type: {task.TaskType}");
+            }
+
+            return View(training);
+        }
+
+        [HttpPatch]
+        public async Task<IActionResult> Edit([FromBody] Training model)
+        {
+            if (model == null || model.Id <= 0)
+            {
+                return BadRequest("Invalid training data.");
+            }
+
+            var training = await _context.Trainings
+                .Include(t => t.Tasks)
+                .FirstOrDefaultAsync(t => t.Id == model.Id);
+
+            if (training == null)
+            {
+                return NotFound("Training not found.");
+            }
+
+            // Aktualizacja daty
+            training.Date = model.Date;
+
+            // Aktualizacja zadań
+            foreach (var updatedTask in model.Tasks)
+            {
+                var existingTask = training.Tasks.FirstOrDefault(t => t.Id == updatedTask.Id);
+                if (existingTask != null)
+                {
+                    existingTask.TrainingSection = updatedTask.TrainingSection;
+                    existingTask.TaskDescription = updatedTask.TaskDescription;
+                    existingTask.Distance = updatedTask.Distance;
+                    existingTask.TaskType = updatedTask.TaskType;
+                }
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = "Training updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving training: {ex.Message}");
+                return StatusCode(500, "An error occurred while saving changes.");
+            }
+        }
+
+
+
+        [HttpGet]
+        public IActionResult Delete()
+        {
+            ViewBag.Trainings = _context.Trainings.ToList();
             return View();
         }
 
-        // POST: Trainings/Edit
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int selectedTrainingId)
-        {
-            if (selectedTrainingId == 0)
-            {
-                return NotFound();
-            }
 
-            var training = await _context.Trainings
-                .Include(t => t.Tasks)
-                .FirstOrDefaultAsync(t => t.Id == selectedTrainingId);
-
-            if (training == null)
-            {
-                return NotFound();
-            }
-
-            return View("EditForm", training); // Otwiera widok formularza edycji
-        }
-
-        // POST: Trainings/EditForm
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditForm(int id, [Bind("Id,Date,Tasks")] Training training)
-        {
-            if (id != training.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    // Aktualizacja treningu
-                    _context.Update(training);
-
-                    // Aktualizacja zadań
-                    foreach (var task in training.Tasks)
-                    {
-                        if (task.Id == 0)
-                        {
-                            // Nowe zadanie
-                            task.TrainingId = training.Id;
-                            _context.Add(task);
-                        }
-                        else
-                        {
-                            // Istniejące zadanie
-                            _context.Update(task);
-                        }
-                    }
-
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!TrainingExists(training.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-
-            return View(training);
-        }
-
-        // GET: Trainings/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var training = await _context.Trainings
-                .Include(t => t.Tasks)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (training == null)
-            {
-                return NotFound();
-            }
-
-            return View(training);
-        }
-
-        // POST: Trainings/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        [HttpDelete]
+        public async Task<IActionResult> Delete(int id)
         {
             var training = await _context.Trainings.Include(t => t.Tasks).FirstOrDefaultAsync(t => t.Id == id);
 
-            if (training != null)
+            if (training == null)
             {
-                // Usunięcie powiązanych zadań
-                foreach (var task in training.Tasks)
-                {
-                    _context.TrainingTasks.Remove(task);
-                }
-
-                // Usunięcie treningu
-                _context.Trainings.Remove(training);
+                return NotFound("Training not found.");
             }
 
+            // Usuń wszystkie zadania związane z treningiem
+            _context.TrainingTasks.RemoveRange(training.Tasks);
+
+            // Usuń trening
+            _context.Trainings.Remove(training);
+
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return Ok("Training deleted successfully.");
         }
+
 
         // API: Trainings/GetTrainingDetails/5
         [HttpGet]

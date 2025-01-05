@@ -1,15 +1,22 @@
-﻿namespace SwimTrainingApp.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SwimTrainingApp.Models
 {
     public class TrainingTask
     {
         public int Id { get; set; }
-        public int TrainingId { get; set; }
+        public int TrainingId { get; set; } // Klucz obcy do `Training`
+
+        // Nawigacja do `Training` (relacja)
         public Training Training { get; set; }
-        public string TrainingSection { get; set; } = string.Empty; 
-        public string TaskDescription { get; set; } = string.Empty; 
-        public int Distance { get; set; } 
-        public TaskType? TaskType { get; set; }
+
+        public string TrainingSection { get; set; }
+        public string TaskDescription { get; set; }
+        public int Distance { get; set; }
+        public TaskType TaskType { get; set; }
     }
+
+
 
     public enum TaskType
     {
