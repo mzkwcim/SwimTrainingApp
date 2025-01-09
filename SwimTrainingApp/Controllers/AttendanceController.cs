@@ -19,12 +19,14 @@ namespace SwimTrainingApp.Controllers
         {
             _context = context;
         }
+
         [Authorize(Roles = "Admin,Coach,Athelete")]
         public IActionResult Index()
         {
             ViewBag.Trainings = _context.Trainings.ToList();
             return View();
         }
+
         [Authorize(Roles = "Admin,Coach")]
         public IActionResult Create(int? TrainingId)
         {
@@ -52,21 +54,22 @@ namespace SwimTrainingApp.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Coach")]
-        public IActionResult Create()
+        public IActionResult Create(int TrainingId, List<Attendance> Attendances)
         {
-            var trainings = _context.Trainings.ToList();
-            if (!trainings.Any())
+            if (Attendances == null || Attendances.Count == 0)
             {
-                ViewBag.Message = "No trainings available.";
-                ViewBag.Trainings = new List<Training>();
-                return View();
+                ViewBag.Message = "No attendance data provided.";
+                return RedirectToAction(nameof(Create), new { TrainingId });
             }
 
-            ViewBag.Trainings = trainings;
+            foreach (var attendance in Attendances)
+            {
+                _context.Attendances.Add(attendance);
+            }
 
-            ViewBag.Users = _context.Users.Where(u => u.Role == UserRole.Athlete).ToList();
+            _context.SaveChanges();
 
-            return View();
+            return RedirectToAction(nameof(Index));
         }
 
         [Authorize(Roles = "Admin,Coach,Athlete")]
@@ -80,7 +83,7 @@ namespace SwimTrainingApp.Controllers
             }
 
             var attendanceList = _context.Attendances
-                .Include(a => a.Training) 
+                .Include(a => a.Training)
                 .ToList();
 
             var users = _context.Users.ToDictionary(u => u.Id, u => u.Username);
@@ -94,6 +97,7 @@ namespace SwimTrainingApp.Controllers
 
             return View(filteredAttendance);
         }
+
         [HttpGet]
         [Authorize(Roles = "Admin,Coach")]
         public IActionResult Edit(int? TrainingId)
@@ -141,7 +145,6 @@ namespace SwimTrainingApp.Controllers
             return RedirectToAction(nameof(Edit), new { TrainingId });
         }
 
-
         [HttpGet]
         [Authorize(Roles = "Admin,Coach,Athlete")]
         public IActionResult ViewByDateRange(DateTime? startDate, DateTime? endDate)
@@ -187,7 +190,6 @@ namespace SwimTrainingApp.Controllers
             return View(attendanceStats);
         }
 
-
         [Authorize(Roles = "Admin")]
         public IActionResult Delete(int? TrainingId)
         {
@@ -223,8 +225,5 @@ namespace SwimTrainingApp.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
-
     }
-
 }

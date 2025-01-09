@@ -12,24 +12,24 @@
     {
         <a href="@Url.Action("Details", "Trainings")
         " class="list-group-item list-group-item-action btn btn-info">
-            View Attendance Table
+            View Training Table
         </a>
     }
     @if (User.IsInRole("Admin") || User.IsInRole("Coach"))
     {
         <a href="@Url.Action("Edit", "Trainings")
         " class="list-group-item list-group-item-action btn btn-warning">
-            Edit Attendance Table
+            Edit Training Table
         </a>
         <a href="@Url.Action("Create", "Trainings")" class="list-group-item list-group-item-action btn btn-primary">
-            Create Attendance Table
+            Create Training Table
         </a>
     }
     @if (User.IsInRole("Admin"))
     {
         <a href="@Url.Action("Delete", "Trainings")
         " class="list-group-item list-group-item-action btn btn-danger">
-            Delete Attendance Table
+            Delete Training Table
         </a>
     }
 </div>

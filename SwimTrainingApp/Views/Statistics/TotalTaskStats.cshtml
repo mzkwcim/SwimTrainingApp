@@ -24,7 +24,7 @@
             {
                 <tr>
                     <td>@task.TaskType</td>
-                    <td>@(task.TotalDistance)</td> 
+                    <td>@string.Format("{0:0.00}", task.TotalDistance)</td>
                     <td>@task.Percentage</td> 
                 </tr>
             }
