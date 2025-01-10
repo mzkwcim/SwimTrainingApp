@@ -104,6 +104,42 @@ namespace SwimTrainingApp.Controllers
         [HttpPost]
         public IActionResult Register(string username, string password)
         {
+            if (string.IsNullOrEmpty(password))
+            {
+                ViewBag.ErrorMessage = "Password cannot be empty";
+                return View();
+            }
+
+            if (password.Length < 12)
+            {
+                ViewBag.ErrorMessage = "Password should have at least 12 characters.";
+                return View();
+            }
+
+            if (!password.Any(char.IsLower))
+            {
+                ViewBag.ErrorMessage = "Password should contain at least one lowercase letter.";
+                return View();
+            }
+
+            if (!password.Any(char.IsUpper))
+            {
+                ViewBag.ErrorMessage = "Password should contain at least one uppercase letter.";
+                return View();
+            }
+
+            if (!password.Any(char.IsDigit))
+            {
+                ViewBag.ErrorMessage = "Password should contain at least one digit.";
+                return View();
+            }
+
+            if (!password.Any(ch => char.IsPunctuation(ch) || char.IsSymbol(ch)))
+            {
+                ViewBag.ErrorMessage = "Password should contain at least one special character.";
+                return View();
+            }
+
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
                 ViewBag.ErrorMessage = "Username and password are required.";

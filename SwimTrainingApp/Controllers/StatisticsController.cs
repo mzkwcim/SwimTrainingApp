@@ -145,7 +145,7 @@ namespace SwimTrainingApp.Controllers
                 {
                     TaskType = g.Key.ToString(),
                     TotalDistance = g.Sum(t => t.Distance),
-                    Percentage = (g.Sum(t => t.Distance) / (double)totalDistance) * 100
+                    Percentage = Math.Round((g.Sum(t => t.Distance) / (double)totalDistance) * 100,2)
                 })
                 .ToList();
 

@@ -11,13 +11,16 @@
         <ul class="list-group">
             @if (User.Identity.IsAuthenticated)
             {
-                @if (User.IsInRole("Admin") || User.IsInRole("Coach") || User.IsInRole("Athlete"))
+                @if (User.IsInRole(""))
                 {
                     <li class="list-group-item">
                         <a href="@Url.Action("TaskTypeDistribution", "Statistics")" class="list-group-item list-group-item-action btn btn-primary">
                             Task Type Distribution
                         </a>
                     </li>
+                }
+                    @if (User.IsInRole("Admin") || User.IsInRole("Coach") || User.IsInRole("Athlete"))
+                    {
                     <li class="list-group-item">
                         <a href="@Url.Action("AthleteTaskStats", "Statistics")" class="list-group-item list-group-item-action btn btn-primary">
                             Athlete Task Statistics
@@ -28,7 +31,7 @@
                         Total Task Statistics
                         </a>
                     </li>
-                }
+                 }
             }
         </ul>
     </div>

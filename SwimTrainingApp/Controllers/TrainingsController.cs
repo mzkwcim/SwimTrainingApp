@@ -192,7 +192,7 @@ namespace SwimTrainingApp.Controllers
 
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public IActionResult Delete()
         {
             ViewBag.Trainings = _context.Trainings.ToList();
@@ -201,7 +201,7 @@ namespace SwimTrainingApp.Controllers
 
 
         [HttpDelete]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Coach,Athlete")]
         public async Task<IActionResult> Delete(int id)
         {
             var training = await _context.Trainings.Include(t => t.Tasks).FirstOrDefaultAsync(t => t.Id == id);
