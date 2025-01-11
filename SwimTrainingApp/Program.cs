@@ -33,9 +33,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/Home/Login";
         options.LogoutPath = "/Home/Logout";
         options.AccessDeniedPath = "/Home/AccessDenied";
-        options.Cookie.HttpOnly = true; // Zapobiega dostêpowi do ciasteczek z JavaScript
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Wymaga HTTPS
-        options.Cookie.SameSite = SameSiteMode.Strict; // Chroni przed atakami CSRF
+        options.Cookie.HttpOnly = true; 
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     });
 
 builder.Services.AddAuthorization();

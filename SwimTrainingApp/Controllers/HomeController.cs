@@ -44,11 +44,30 @@ namespace SwimTrainingApp.Controllers
             return View();
         }
 
+        private static readonly Dictionary<string, (int Attempts, DateTime LastAttempt)> LoginAttempts = new();
+
         [AllowAnonymous]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string username, string password)
         {
-            
+            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+
+            if (LoginAttempts.ContainsKey(clientIp))
+            {
+                var (attempts, lastAttempt) = LoginAttempts[clientIp];
+
+                if (attempts >= 5 && lastAttempt.AddMinutes(1) > DateTime.Now)
+                {
+                    return Content("Zbyt wiele nieudanych prób logowania. Spróbuj ponownie za minutę.");
+                }
+
+                if (lastAttempt.AddMinutes(1) <= DateTime.Now)
+                {
+                    LoginAttempts[clientIp] = (0, DateTime.Now); // Reset prób po czasie
+                }
+            }
+
             string hashedPassword = HashPassword(password);
 
           
@@ -76,7 +95,14 @@ namespace SwimTrainingApp.Controllers
             var principal = new ClaimsPrincipal(identity);
 
 
-            await HttpContext.SignInAsync(principal);
+            await HttpContext.SignInAsync(
+                 principal,
+                new AuthenticationProperties
+                {
+                    //IsPersistent = true, 
+                    ExpiresUtc = DateTime.UtcNow.AddMinutes(30), 
+                    AllowRefresh = true
+                });
 
             return RedirectToAction("Index");
         }
@@ -168,7 +194,7 @@ namespace SwimTrainingApp.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult AccessDenied(string returnUrl = "/")
+        public IActionResult AccessDenied(string returnUrl = "/home/login")
         {
             ViewBag.ReturnUrl = returnUrl ?? "/";
             ViewData["Title"] = "Access Denied";
