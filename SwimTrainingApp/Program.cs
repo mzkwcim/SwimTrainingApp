@@ -18,6 +18,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
            .EnableSensitiveDataLogging()
            .LogTo(Console.WriteLine));
+builder.Services.AddDbContext<ClubRecordsDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ClubRecordsConnection"))
+           .EnableSensitiveDataLogging()
+           .LogTo(Console.WriteLine));
 
 builder.Services.AddControllersWithViews()
     .AddNewtonsoftJson(options =>
